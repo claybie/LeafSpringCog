@@ -6,19 +6,47 @@
 ---@type TNpcEntity
 local entity = {}
 
-local hpEvent = 8701
-local hpIndex = 12
+entity.onTrade = function(player, npc, trade)
+end
 
 entity.onTrigger = function(player, npc)
-    xi.homepoint.onTrigger(player, hpEvent, hpIndex)
+    local menu =
+    {
+        title   = "What will you do?",
+        onStart = function(playerArg)
+	playerArg:printToPlayer("A home point can be set as a spot for you to return to when you have been K.O.'d", xi.msg.channel.NS_SAY)
+        end,
+
+        options =
+        {
+            {
+                "Set this as your home point.",
+                function(playerArg)
+                    playerArg:printToPlayer("Home point set!", xi.msg.channel.NS_SAY)
+                    playerArg:setHomePoint()
+		    playerArg:independentAnimation(playerArg, 43, 3)
+                end,
+            },
+            {
+                "On second thought, never mind.",
+                function(playerArg)
+                end,
+            },
+        },
+
+        onCancelled = function(playerArg)
+        end,
+
+        onEnd = function(playerArg)
+        end,
+    }
+    player:customMenu(menu)
 end
 
-entity.onEventUpdate = function(player, csid, option, npc)
-    xi.homepoint.onEventUpdate(player, csid, option, npc)
+entity.onEventUpdate = function(player, csid, option)
 end
 
-entity.onEventFinish = function(player, csid, option, npc)
-    xi.homepoint.onEventFinish(player, csid, option, hpEvent)
+entity.onEventFinish = function(player, csid, option)
 end
 
 return entity

@@ -110,7 +110,7 @@ std::vector<ahItem*> CDataLoader::GetAHItemsToCategory(uint8 ahCategoryID, const
                                           "LEFT JOIN auction_house ON item_basic.itemId = auction_house.itemid AND auction_house.buyer_name IS NULL "
                                           "LEFT JOIN item_equipment ON item_basic.itemid = item_equipment.itemid "
                                           "LEFT JOIN item_weapon ON item_basic.itemid = item_weapon.itemid "
-                                          "WHERE aH = ? "
+                                          "WHERE aH = ? AND auction_house.itemid IS NOT NULL "
                                           "GROUP BY item_basic.itemid "
                                           "{}",
                                           fromTable, orderByString);

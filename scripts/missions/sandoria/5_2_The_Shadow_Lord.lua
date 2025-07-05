@@ -117,6 +117,7 @@ mission.sections =
                 onTrigger = function(player, npc)
                     if player:getMissionStatus(mission.areaId) == 2 then
                         return mission:progressEvent(6)
+			player:addSpell(xi.magic.spell.ZEID)
                     end
                 end
             },

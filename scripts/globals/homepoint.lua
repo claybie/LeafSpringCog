@@ -133,12 +133,12 @@ local homepointData =
 local selection =
 {
     SET_HOMEPOINT = 1,
-    TELEPORT      = 2,
-    SAME_ZONE     = 3,
-    SET_LAYOUT    = 4,
-    ADD_FAVORITE  = 5,
-    REM_FAVORITE  = 6,
-    REP_FAVORITE  = 7,
+    --TELEPORT      = 2,
+    --SAME_ZONE     = 3,
+    --SET_LAYOUT    = 4,
+    --ADD_FAVORITE  = 5,
+    --REM_FAVORITE  = 6,
+    --REP_FAVORITE  = 7,
     SHOW_MENU     = 8
 }
 

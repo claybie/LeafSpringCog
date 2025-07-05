@@ -1013,14 +1013,14 @@ def present_menu(title, contents):
 
 
 def configure_single_process():
-    query = f"UPDATE xidb.zone_settings SET zoneport = 54230;"
+    query = f"UPDATE rheinlandpfalz.zone_settings SET zoneport = 54230;"
     print(query)
     db_query(query)
 
 
 def configure_multi_process_by_modulus(mod):
     for idx in range(0, mod):
-        query = f"UPDATE xidb.zone_settings SET zoneport = 54230 + {idx} WHERE zoneid % {mod} = {idx};"
+        query = f"UPDATE rheinlandpfalz.zone_settings SET zoneport = 54230 + {idx} WHERE zoneid % {mod} = {idx};"
         print(query)
         db_query(query)
 
@@ -1056,7 +1056,7 @@ def launch_process_in_background(process_params):
     # fmt: on
 
 def launch_using_zone_settings():
-    result = db_query("SELECT DISTINCT zoneip FROM xidb.zone_settings;")
+    result = db_query("SELECT DISTINCT zoneip FROM rheinlandpfalz.zone_settings;")
 
     zoneip = result.stdout.split("\n")[1]
 
