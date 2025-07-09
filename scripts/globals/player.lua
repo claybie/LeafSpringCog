@@ -144,7 +144,9 @@ xi.player.charCreate = function(player)
     player:setCharVar('spokePyropox', 1)                -- Pyropox introduction
     player:setCharVar('TutorialProgress', 1)            -- Has not started tutorial
     player:setCharVar('EinherjarIntro', 1)              -- Has not seen Einherjar intro
-    player:setNewPlayer(true)                           -- apply new player flag
+    --player:setNewPlayer(true)                           -- apply new player flag
+    player:addLinkpearl("Rhinelanders", true) -- Adds server Linkshell to inventory and equips it
+    player:capAllSkills() -- All initial skills are capped for level 1
 end
 
 -- called by core after a player logs into the server or zones
@@ -245,6 +247,7 @@ xi.player.onPlayerDeath = function(player)
 end
 
 xi.player.onPlayerLevelUp = function(player)
+        player:capAllSkills() -- All skills for current job become maxed on level up
 end
 
 xi.player.onPlayerLevelDown = function(player)
