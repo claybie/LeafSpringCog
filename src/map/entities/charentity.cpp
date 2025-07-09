@@ -2106,7 +2106,7 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
     actionTarget_t& actionTarget = actionList.getNewActionTarget();
     actionTarget.reaction        = REACTION::HIT;   // 0x10
     actionTarget.speceffect      = SPECEFFECT::HIT; // 0x60 (SPECEFFECT_HIT + SPECEFFECT_RECOIL)
-    actionTarget.messageID       = 352;
+    actionTarget.messageID       = MSGBASIC_RANGED_ATTACK_HIT;
 
     CItemWeapon* PItem = (CItemWeapon*)this->getEquip(SLOT_RANGED);
     CItemWeapon* PAmmo = (CItemWeapon*)this->getEquip(SLOT_AMMO);
@@ -2166,7 +2166,7 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
                 if (isCritical)
                 {
                     actionTarget.speceffect = SPECEFFECT::CRITICAL_HIT;
-                    actionTarget.messageID  = 353;
+                    actionTarget.messageID  = MSGBASIC_RANGED_ATTACK_CRIT;
                 }
 
                 // at least 1 hit occured
@@ -2232,10 +2232,40 @@ void CCharEntity::OnRangedAttack(CRangeState& state, action_t& action)
     // if a hit did occur (even without barrage)
     if (hitOccured)
     {
+        // Critical Hits don't get distance messaging
+        if (actionTarget.messageID != MSGBASIC_RANGED_ATTACK_CRIT)
+        {
+            auto rangedPenaltyFunction = lua["xi"]["combat"]["ranged"]["attackDistancePenalty"];
+            auto distancePenaltyResult = rangedPenaltyFunction(this, PTarget);
+            int  distancePenalty       = 0;
+
+            if (!distancePenaltyResult.valid())
+            {
+                sol::error err = distancePenaltyResult;
+                ShowError("charentity::OnRangedAttack: %s", err.what());
+            }
+            else
+            {
+                distancePenalty = distancePenaltyResult.get_type() == sol::type::number ? distancePenaltyResult.get<int16>(0) : 0;
+            }
+
+            if (distancePenalty == 0)
+            {
+                actionTarget.messageID = MSGBASIC_RANGED_ATTACK_PUMMELS;
+            }
+            else if (distancePenalty <= 15)
+            {
+                actionTarget.messageID = MSGBASIC_RANGED_ATTACK_SQUARELY;
+            }
+            else
+            {
+                actionTarget.messageID = MSGBASIC_RANGED_ATTACK_HIT;
+            }
+        }
+
         // any misses with barrage cause remaining shots to miss, meaning we must check Action.reaction
         if ((actionTarget.reaction & REACTION::MISS) != REACTION::NONE && StatusEffectContainer->HasStatusEffect(EFFECT_BARRAGE))
         {
-            actionTarget.messageID  = 352;
             actionTarget.reaction   = REACTION::HIT;
             actionTarget.speceffect = SPECEFFECT::CRITICAL_HIT;
         }

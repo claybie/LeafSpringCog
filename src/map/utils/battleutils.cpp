@@ -1602,13 +1602,26 @@ namespace battleutils
 
     uint8 GetRangedHitRate(CBattleEntity* PAttacker, CBattleEntity* PDefender, bool isBarrage, int16 accBonus)
     {
-        int acc     = 0;
-        int hitrate = 75;
+        int  acc                   = 0;
+        int  hitrate               = 75;
+        auto rangedPenaltyFunction = lua["xi"]["combat"]["ranged"]["accuracyDistancePenalty"];
+        auto distancePenaltyResult = rangedPenaltyFunction(PAttacker, PDefender);
+        int  distancePenalty       = 0;
 
         // Check to see if distance is greater than 25 and force hitrate to be 0
         if (distance(PAttacker->loc.p, PDefender->loc.p) > 25)
         {
             return 0;
+        }
+
+        if (!distancePenaltyResult.valid())
+        {
+            sol::error err = distancePenaltyResult;
+            ShowError("battleutils::GetRangedHitRate: %s", err.what());
+        }
+        else
+        {
+            distancePenalty = distancePenaltyResult.get_type() == sol::type::number ? distancePenaltyResult.get<int16>(0) : 0;
         }
 
         if (PAttacker->objtype == TYPE_PC)
@@ -1654,6 +1667,8 @@ namespace battleutils
         // Add any specific accuracy bonus, e.g. Daken RAcc +100
         acc += accBonus;
 
+        acc -= distancePenalty;
+
         int eva = PDefender->EVA();
         hitrate = hitrate + (acc - eva) / 2 + (PAttacker->GetMLevel() - PDefender->GetMLevel()) * 2;
 
@@ -1666,7 +1681,6 @@ namespace battleutils
         return GetRangedHitRate(PAttacker, PDefender, isBarrage, 0);
     }
 
-    // todo: need to penalise attacker's RangedAttack depending on distance from mob. (% decrease)
     float GetRangedDamageRatio(CBattleEntity* PAttacker, CBattleEntity* PDefender, bool isCritical, int16 bonusRangedAttack)
     {
         float pDIF = 1.0;

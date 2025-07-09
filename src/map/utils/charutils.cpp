@@ -2163,8 +2163,9 @@ namespace charutils
                         CItemWeapon* weapon = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_AMMO));
                         if (weapon)
                         {
+                            // If the subtype of the ranged weapon is not compatible with the ammo, unequip it, except for Archery where Longbow and Shortbow both use arrows
                             if (static_cast<CItemWeapon*>(PItem)->getSkillType() != weapon->getSkillType() ||
-                                static_cast<CItemWeapon*>(PItem)->getSubSkillType() != weapon->getSubSkillType())
+                                (weapon->getSkillType() != SKILL_ARCHERY && static_cast<CItemWeapon*>(PItem)->getSubSkillType() != weapon->getSubSkillType()))
                             {
                                 UnequipItem(PChar, SLOT_AMMO, false);
                             }
@@ -2182,8 +2183,9 @@ namespace charutils
                         CItemWeapon* weapon = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_RANGED));
                         if (weapon)
                         {
+                            // If the subtype of the ammo is not compatible with the ranged weapon, unequip it, except for Archery where Longbow and Shortbow both use arrows
                             if (static_cast<CItemWeapon*>(PItem)->getSkillType() != weapon->getSkillType() ||
-                                static_cast<CItemWeapon*>(PItem)->getSubSkillType() != weapon->getSubSkillType())
+                                (weapon->getSkillType() != SKILL_ARCHERY && static_cast<CItemWeapon*>(PItem)->getSubSkillType() != weapon->getSubSkillType()))
                             {
                                 UnequipItem(PChar, SLOT_RANGED, false);
                             }

@@ -117,9 +117,15 @@ enum MSGBASIC_ID : uint16
     MSGBASIC_GARDENING_CRYSTAL_USED = 258, // Crystal used: <item>*/
 
     // Ranged
-    MSGBASIC_NO_RANGED_WEAPON   = 216, // You do not have an appropriate ranged weapon equipped.
-    MSGBASIC_CANNOT_SEE         = 217, // You cannot see <target>.
-    MSGBASIC_MOVE_AND_INTERRUPT = 218, // You move and interrupt your aim.
+    MSGBASIC_NO_RANGED_WEAPON        = 216, // You do not have an appropriate ranged weapon equipped.
+    MSGBASIC_CANNOT_SEE              = 217, // You cannot see <target>.
+    MSGBASIC_MOVE_AND_INTERRUPT      = 218, // You move and interrupt your aim.
+    MSGBASIC_RANGED_ATTACK_HIT       = 352, // <user> ranged attack hits <target> for <amount> points of damage.
+    MSGBASIC_RANGED_ATTACK_CRIT      = 353, // <user> ranged attack scores a critical hit! \n <target> takes <amount> points of damage.
+    MSGBASIC_RANGED_ATTACK_MISS      = 354, // <user> ranged attack misses.
+    MSGBASIC_RANGED_ATTACK_NO_EFFECT = 355, // <user> ranged attack has no effect on <target>.
+    MSGBASIC_RANGED_ATTACK_SQUARELY  = 576, // <user> ranged attack hits the <target> squarely for <amount> points of damage.,
+    MSGBASIC_RANGED_ATTACK_PUMMELS   = 577, // <user> ranged attack strikes true, pummeling <target> for <amount> points of damage!,
 
     // Charm
     MSGBASIC_CHARM_SUCCESS        = 136, // The <player> uses .. <target> is now under the <player>'s control.
