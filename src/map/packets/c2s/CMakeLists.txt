@@ -4,6 +4,14 @@ set(PACKET_C2S_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/validation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x00d_netend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x00d_netend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x00f_clstat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x00f_clstat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x011_zone_transition.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x011_zone_transition.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x015_pos.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x015_pos.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x016_charreq.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x016_charreq.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x017_charreq2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x017_charreq2.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x01b_friendpass.cpp
@@ -18,19 +26,31 @@ set(PACKET_C2S_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/0x02c_itemsearch.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x041_trophy_entry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x041_trophy_entry.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x042_trophy_absence.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x042_trophy_absence.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x058_recipe.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x058_recipe.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x059_effectend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x059_effectend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x05a_reqconquest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x05a_reqconquest.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x061_clistatus.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x061_clistatus.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x063_dig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x063_dig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x066_fishing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x09b_chocobo_race_req.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x09b_chocobo_race_req.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a0_switch_proposal.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a0_switch_proposal.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a1_switch_vote.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a1_switch_vote.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0a2_dice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0a2_dice.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0b7_assist_channel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0b7_assist_channel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0be_merits.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0be_merits.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0bf_job_points_spend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0bf_job_points_spend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0c0_job_points_req.cpp

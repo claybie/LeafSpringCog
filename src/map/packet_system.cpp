@@ -62,7 +62,6 @@
 
 #include "entities/charentity.h"
 #include "entities/mobentity.h"
-#include "entities/npcentity.h"
 #include "entities/trustentity.h"
 
 #include "items/item_shop.h"
@@ -73,6 +72,10 @@
 #include "packets/bazaar_message.h"
 #include "packets/blacklist_edit_response.h"
 #include "packets/c2s/0x00d_netend.h"
+#include "packets/c2s/0x00f_clstat.h"
+#include "packets/c2s/0x011_zone_transition.h"
+#include "packets/c2s/0x015_pos.h"
+#include "packets/c2s/0x016_charreq.h"
 #include "packets/c2s/0x017_charreq2.h"
 #include "packets/c2s/0x01b_friendpass.h"
 #include "packets/c2s/0x01c_unknown.h"
@@ -80,13 +83,19 @@
 #include "packets/c2s/0x02b_translate.h"
 #include "packets/c2s/0x02c_itemsearch.h"
 #include "packets/c2s/0x041_trophy_entry.h"
+#include "packets/c2s/0x042_trophy_absence.h"
 #include "packets/c2s/0x058_recipe.h"
 #include "packets/c2s/0x059_effectend.h"
+#include "packets/c2s/0x05a_reqconquest.h"
+#include "packets/c2s/0x061_clistatus.h"
 #include "packets/c2s/0x063_dig.h"
 #include "packets/c2s/0x066_fishing.h"
+#include "packets/c2s/0x09b_chocobo_race_req.h"
 #include "packets/c2s/0x0a0_switch_proposal.h"
 #include "packets/c2s/0x0a1_switch_vote.h"
+#include "packets/c2s/0x0a2_dice.h"
 #include "packets/c2s/0x0b7_assist_channel.h"
+#include "packets/c2s/0x0be_merits.h"
 #include "packets/c2s/0x0bf_job_points_spend.h"
 #include "packets/c2s/0x0c0_job_points_req.h"
 #include "packets/c2s/0x0d2_map_group.h"
@@ -138,24 +147,15 @@
 #include "packets/c2s/0x11b_mastery_display.h"
 #include "packets/c2s/0x11c_party_request.h"
 #include "packets/c2s/0x11d_jump.h"
-#include "packets/char_abilities.h"
 #include "packets/char_appearance.h"
 #include "packets/char_check.h"
 #include "packets/char_emotion.h"
-#include "packets/char_equip.h"
-#include "packets/char_health.h"
-#include "packets/char_job_extra.h"
 #include "packets/char_jobs.h"
-#include "packets/char_mounts.h"
 #include "packets/char_recast.h"
-#include "packets/char_skills.h"
-#include "packets/char_spells.h"
-#include "packets/char_stats.h"
 #include "packets/char_status.h"
 #include "packets/char_sync.h"
 #include "packets/chat_message.h"
 #include "packets/chocobo_digging.h"
-#include "packets/conquest_map.h"
 #include "packets/cs_position.h"
 #include "packets/downloading_data.h"
 #include "packets/fish_ranking.h"
@@ -173,13 +173,9 @@
 #include "packets/macroequipset.h"
 #include "packets/menu_config.h"
 #include "packets/menu_jobpoints.h"
-#include "packets/menu_merit.h"
-#include "packets/merit_points_categories.h"
 #include "packets/message_basic.h"
 #include "packets/message_standard.h"
 #include "packets/message_system.h"
-#include "packets/monipulator1.h"
-#include "packets/monipulator2.h"
 #include "packets/party_define.h"
 #include "packets/party_invite.h"
 #include "packets/party_search.h"
@@ -191,12 +187,10 @@
 #include "packets/server_message.h"
 #include "packets/shop_appraise.h"
 #include "packets/shop_buy.h"
-#include "packets/status_effects.h"
 #include "packets/trade_action.h"
 #include "packets/trade_item.h"
 #include "packets/trade_request.h"
 #include "packets/trade_update.h"
-#include "packets/wide_scan_track.h"
 #include "packets/zone_in.h"
 #include "packets/zone_visited.h"
 
@@ -395,228 +389,6 @@ void SmallPacket0x00C(MapSession* const PSession, CCharEntity* const PChar, CBas
 
         PChar->resetPetZoningInfo();
     }
-}
-
-/************************************************************************
- *                                                                       *
- *  Player Information Request                                           *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x00F(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    charutils::SendKeyItems(PChar);
-    charutils::SendQuestMissionLog(PChar);
-
-    PChar->pushPacket<CCharSpellsPacket>(PChar);
-    PChar->pushPacket<CCharMountsPacket>(PChar);
-    PChar->pushPacket<CCharAbilitiesPacket>(PChar);
-    PChar->pushPacket<CCharSyncPacket>(PChar);
-    PChar->pushPacket<CBazaarMessagePacket>(PChar);
-    PChar->pushPacket<CMeritPointsCategoriesPacket>(PChar);
-
-    charutils::SendInventory(PChar);
-
-    // Note: This sends the stop downloading packet!
-    blacklistutils::SendBlacklist(PChar);
-}
-
-/************************************************************************
- *                                                                       *
- *  Player Zone Transition Confirmation                                  *
- *  First packet sent after transitioning zones or entering the game.    *
- *  Client confirming the zoning was successful, equips gear.            *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x011(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    PSession->blowfish.status = BLOWFISH_ACCEPTED;
-    PChar->status             = STATUS_TYPE::NORMAL;
-    PChar->health.tp          = 0;
-
-    for (uint8 i = 0; i < 16; ++i)
-    {
-        if (PChar->equip[i] != 0)
-        {
-            PChar->pushPacket<CEquipPacket>(PChar->equip[i], i, PChar->equipLoc[i]);
-        }
-    }
-
-    PChar->PAI->QueueAction(queueAction_t(4000ms, false, zoneutils::AfterZoneIn));
-}
-
-/************************************************************************
- *                                                                       *
- *  Player Sync                                                          *
- *  Updates the players position and other important information.        *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x015(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-    TracyZoneCString("Player Sync");
-
-    if (PChar->status != STATUS_TYPE::SHUTDOWN && PChar->status != STATUS_TYPE::DISAPPEAR && !PChar->pendingPositionUpdate)
-    {
-        float  newX        = data.ref<float>(0x04);
-        float  newY        = data.ref<float>(0x08);
-        float  newZ        = data.ref<float>(0x0C);
-        uint16 newTargID   = data.ref<uint16>(0x16);
-        uint8  newRotation = data.ref<uint8>(0x14);
-
-        // clang-format off
-        bool moved =
-            PChar->loc.p.x != newX ||
-            PChar->loc.p.y != newY ||
-            PChar->loc.p.z != newZ ||
-            PChar->m_TargID != newTargID ||
-            PChar->loc.p.rotation != newRotation;
-        // clang-format on
-
-        // Cache previous location
-        PChar->m_previousLocation = PChar->loc;
-
-        if (!PChar->isCharmed)
-        {
-            PChar->loc.p.x = newX;
-            PChar->loc.p.y = newY;
-            PChar->loc.p.z = newZ;
-
-            PChar->loc.p.moving   = data.ref<uint16>(0x12);
-            PChar->loc.p.rotation = newRotation;
-
-            PChar->m_TargID = newTargID;
-        }
-
-        if (moved)
-        {
-            PChar->updatemask |= UPDATE_POS; // Indicate that we want to update this PChar's PChar->loc or targID
-
-            // Calculate rough amount of steps taken
-            if (PChar->m_previousLocation.zone->GetID() == PChar->loc.zone->GetID())
-            {
-                float distanceTravelled = distance(PChar->m_previousLocation.p, PChar->loc.p);
-                PChar->m_charHistory.distanceTravelled += static_cast<uint32>(distanceTravelled);
-            }
-        }
-
-        // Request updates for all entity types
-        PChar->loc.zone->SpawnNPCs(PChar); // Some NPCs can move, some rotate when other players talk to them, always request NPC updates.
-        PChar->loc.zone->SpawnMOBs(PChar);
-        PChar->loc.zone->SpawnPETs(PChar);
-        PChar->loc.zone->SpawnTRUSTs(PChar);
-        PChar->requestedInfoSync = true; // Ask to update PCs during CZoneEntities::ZoneServer
-
-        // clang-format off
-        PChar->WideScanTarget.apply([&](const auto& wideScanTarget)
-        {
-            if (const auto* PWideScanEntity = PChar->GetEntity(wideScanTarget.targid, TYPE_MOB | TYPE_NPC))
-            {
-                PChar->pushPacket<CWideScanTrackPacket>(PWideScanEntity);
-
-                if (PWideScanEntity->status == STATUS_TYPE::DISAPPEAR)
-                {
-                    PChar->WideScanTarget = std::nullopt;
-                }
-            }
-            else
-            {
-                PChar->WideScanTarget = std::nullopt;
-            }
-        });
-        // clang-format on
-    }
-}
-
-/************************************************************************
- *                                                                       *
- *  Entity Information Request (Event NPC Information Request)           *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x016(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    uint16 targid = data.ref<uint16>(0x04);
-
-    if (targid == PChar->targid)
-    {
-        PChar->updateEntityPacket(PChar, ENTITY_SPAWN, UPDATE_ALL_CHAR);
-        PChar->pushPacket<CCharStatusPacket>(PChar);
-    }
-    else
-    {
-        CBaseEntity* PEntity = PChar->GetEntity(targid, TYPE_NPC | TYPE_PC);
-
-        if (PEntity && PEntity->objtype == TYPE_PC)
-        {
-            // Char we want an update for
-            CCharEntity* PCharEntity = dynamic_cast<CCharEntity*>(PEntity);
-            if (PCharEntity)
-            {
-                if (!PCharEntity->m_isGMHidden)
-                {
-                    PChar->updateEntityPacket(PCharEntity, ENTITY_SPAWN, UPDATE_ALL_CHAR);
-                }
-                else
-                {
-                    ShowError(fmt::format("Player {} requested information about a hidden GM ({}) using targid {}", PChar->getName(), PCharEntity->getName(), targid));
-                }
-            }
-        }
-        else
-        {
-            if (!PEntity)
-            {
-                PEntity = zoneutils::GetTrigger(targid, PChar->getZone());
-
-                // PEntity->id will now be the full id of the entity we could not find
-                ShowWarning(fmt::format("Server missing npc_list.sql entry <{}> in zone <{} ({})>",
-                                        PEntity->id, zoneutils::GetZone(PChar->getZone())->getName(), PChar->getZone()));
-            }
-
-            // Special case for onZoneIn cutscenes in Mog House
-            if (PChar->m_moghouseID &&
-                PEntity->status == STATUS_TYPE::DISAPPEAR &&
-                PEntity->loc.p.z == 1.5 &&
-                PEntity->look.face == 0x52)
-            {
-                // Using the same logic as in ZoneEntities::SpawnConditionalNPCs:
-                // Change the status of the entity, send the packet, change it back to disappear
-                PEntity->status = STATUS_TYPE::NORMAL;
-                PChar->updateEntityPacket(PEntity, ENTITY_SPAWN, UPDATE_ALL_MOB);
-                PEntity->status = STATUS_TYPE::DISAPPEAR;
-            }
-            else
-            {
-                PChar->updateEntityPacket(PEntity, ENTITY_SPAWN, UPDATE_ALL_MOB);
-            }
-        }
-    }
-}
-
-/************************************************************************
- *                                                                       *
- *  Invalid NPC Information Response                                     *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x017(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    uint16 targid = data.ref<uint16>(0x04);
-    uint32 npcid  = data.ref<uint32>(0x08);
-    uint8  type   = data.ref<uint8>(0x12);
-
-    ShowWarning("SmallPacket0x17: Incorrect NPC(%u,%u) type(%u)", targid, npcid, type);
 }
 
 /************************************************************************
@@ -2156,33 +1928,6 @@ void SmallPacket0x03D(MapSession* const PSession, CCharEntity* const PChar, CBas
 
 /************************************************************************
  *                                                                       *
- *  Treasure Pool (Pass Item)                                            *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x042(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    uint8 SlotID = data.ref<uint8>(0x04);
-
-    if (SlotID >= TREASUREPOOL_SIZE)
-    {
-        ShowWarning("SmallPacket0x042: Invalid slot ID passed to packet %u by %s", SlotID, PChar->getName());
-        return;
-    }
-
-    if (PChar->PTreasurePool != nullptr)
-    {
-        if (!PChar->PTreasurePool->hasPassedItem(PChar, SlotID))
-        {
-            PChar->PTreasurePool->passItem(PChar, SlotID);
-        }
-    }
-}
-
-/************************************************************************
- *                                                                       *
  *  Server Message Request                                               *
  *                                                                       *
  ************************************************************************/
@@ -2549,23 +2294,6 @@ void SmallPacket0x053(MapSession* const PSession, CCharEntity* const PChar, CBas
         PChar->pushPacket<CCharAppearancePacket>(PChar);
         PChar->pushPacket<CCharSyncPacket>(PChar);
     }
-}
-
-/************************************************************************
- *                                                                       *
- *  Map Update (Conquest, Besieged, Campaign)                            *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x05A(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-    PChar->pushPacket<CConquestPacket>(PChar);
-
-    // TODO: This is unstable across multiple processes. Fix me.
-    // CampaignState state = campaign::GetCampaignState();
-    // PChar->pushPacket<CCampaignPacket>(PChar, state, 0);
-    // PChar->pushPacket<CCampaignPacket>(PChar, state, 1);
 }
 
 /************************************************************************
@@ -3021,36 +2749,6 @@ void SmallPacket0x060(MapSession* const PSession, CCharEntity* const PChar, CBas
 
     PChar->pushPacket<CReleasePacket>(PChar, RELEASE_TYPE::EVENT);
     PChar->pushPacket<CReleasePacket>(PChar, RELEASE_TYPE::PLAYERINPUT);
-}
-
-/************************************************************************
- *                                                                       *
- *                                                                       *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x061(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-    PChar->pushPacket<CCharStatusPacket>(PChar);
-    PChar->pushPacket<CCharHealthPacket>(PChar);
-    PChar->pushPacket<CCharStatsPacket>(PChar);
-    PChar->pushPacket<CCharSkillsPacket>(PChar);
-    PChar->pushPacket<CCharRecastPacket>(PChar);
-    PChar->pushPacket<CMenuMeritPacket>(PChar);
-    PChar->pushPacket<CMonipulatorPacket1>(PChar);
-    PChar->pushPacket<CMonipulatorPacket2>(PChar);
-
-    if (charutils::hasKeyItem(PChar, KeyItem::JOB_BREAKER))
-    {
-        // Only send Job Points Packet if the player has unlocked them
-        PChar->pushPacket<CMenuJobPointsPacket>(PChar);
-        PChar->pushPacket<CJobPointDetailsPacket>(PChar);
-    }
-
-    PChar->pushPacket<CCharJobExtraPacket>(PChar, true);
-    PChar->pushPacket<CCharJobExtraPacket>(PChar, false);
-    PChar->pushPacket<CStatusEffectPacket>(PChar);
 }
 
 /************************************************************************
@@ -4100,169 +3798,6 @@ void SmallPacket0x096(MapSession* const PSession, CCharEntity* const PChar, CBas
 
 /************************************************************************
  *                                                                        *
- *  Chocobo Race Data Request                                             *
- *                                                                        *
- ************************************************************************/
-
-void SmallPacket0x09B(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    // ShowInfo("SmallPacket0x09B");
-
-    // NOTE: Can trigger with !cs 335 from Chocobo Circuit
-
-    // 9B 06 96 04 03 00 00 00 02 00 00 00
-    // auto data0 = data.ref<uint8>(0x03);
-    // auto data1 = data.ref<uint8>(0x04);
-    auto data2 = data.ref<uint8>(0x08);
-
-    if (data2 == 0x01) // Check the tote board
-    {
-        auto packet = std::make_unique<CBasicPacket>();
-        packet->setType(0x73);
-        packet->setSize(0x48);
-
-        packet->ref<uint8>(0x04) = 0x01;
-
-        // Lots of look data, maybe?
-        packet->ref<uint32>(0x08) = 0x003B4879;
-        packet->ref<uint32>(0x10) = 0x00B1C350;
-        // etc.
-
-        PChar->pushPacket(std::move(packet));
-    }
-    else if (data2 == 0x02) // Talk to race official for racing data?
-    {
-        // Send Chocobo Race Data (4x 0x074)
-        for (int idx = 0x01; idx <= 0x04; ++idx)
-        {
-            auto packet = std::make_unique<CBasicPacket>();
-            packet->setType(0x74);
-            packet->setSize(0xB3);
-
-            packet->ref<uint8>(0x03) = 0x04;
-            packet->ref<uint8>(0x04) = 0x03;
-
-            packet->ref<uint8>(0x10) = idx;
-
-            switch (idx)
-            {
-                /*
-                [2023-11-13 12:33:14] Incoming packet 0x074:
-                        |  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F      | 0123456789ABCDEF
-                    -----------------------------------------------------  ----------------------
-                    0 | 74 5A 98 04 03 00 00 00 00 00 00 00 00 00 00 00    0 | tZ..............
-                    1 | 01 00 08 00 28 00 00 00 03 00 00 C0 00 00 00 00    1 | ....(...........
-                    2 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    2 | ................
-                    3 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    3 | ................
-                    4 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    4 | ................
-                    5 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    5 | ................
-                    6 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6 | ................
-                    7 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    7 | ................
-                    8 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    8 | ................
-                    9 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    9 | ................
-                    A | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    A | ................
-                    B | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    B | ....------------
-                */
-                case 0x01:
-                {
-                    packet->ref<uint8>(0x12) = 0x08;
-                    packet->ref<uint8>(0x14) = 0x28; // Seen also as 0xC8
-                    packet->ref<uint8>(0x18) = 0x03; // Seen also as 0x01
-                    packet->ref<uint8>(0x1B) = 0xC0;
-                    break;
-                }
-                /*
-                [2023-11-13 12:33:14] Incoming packet 0x074:
-                        |  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F      | 0123456789ABCDEF
-                    -----------------------------------------------------  ----------------------
-                    0 | 74 5A 98 04 03 00 00 00 00 00 00 00 00 00 00 00    0 | tZ..............
-                    1 | 02 00 60 00 30 00 00 00 FF FF 00 00 00 02 24 13    1 | ..`.0.........$.
-                    2 | 62 00 00 00 FF FF 40 40 00 82 02 15 41 00 00 00    2 | b.....@@....A...
-                    3 | E0 C0 60 80 00 02 20 26 21 00 00 00 C0 80 C0 80    3 | ..`... &!.......
-                    4 | 00 00 24 10 12 00 00 00 FF FF 80 00 00 02 40 10    4 | ..$...........@.
-                    5 | 51 00 00 00 80 60 E0 C0 00 08 08 10 30 00 00 00    5 | Q....`......0...
-                    6 | FF FF 00 00 00 0C 02 11 62 00 00 00 FF FF 40 40    6 | ........b.....@@
-                    7 | 00 C6 20 22 00 00 00 00 00 00 00 00 00 00 00 00    7 | .. "............
-                    8 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    8 | ................
-                    9 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    9 | ................
-                    A | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    A | ................
-                    B | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    B | ....------------
-                */
-                case 0x02:
-                {
-                    // Stat and other data starting at 0x12
-                    packet->ref<uint8>(0x04) = 0x01;
-                    packet->ref<uint8>(0x14) = 0x12;
-
-                    packet->ref<uint32>(0x18) = 0x0080FFFF;
-                    packet->ref<uint32>(0x1C) = 0x13000A00;
-
-                    break;
-                }
-                /*
-                [2023-11-13 12:33:14] Incoming packet 0x074:
-                        |  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F      | 0123456789ABCDEF
-                    -----------------------------------------------------  ----------------------
-                    0 | 74 5A 98 04 03 00 00 00 00 00 00 00 00 00 00 00    0 | tZ..............
-                    1 | 03 00 A0 00 00 00 00 00 49 72 69 73 00 00 00 00    1 | ........Iris....
-                    2 | 00 00 00 00 00 00 00 00 00 00 00 00 53 61 64 64    2 | ............Sadd
-                    3 | 6C 65 00 00 00 00 00 00 00 00 00 00 00 00 00 00    3 | le..............
-                    4 | 43 79 63 6C 6F 6E 65 00 00 00 00 00 00 00 00 00    4 | Cyclone.........
-                    5 | 00 00 00 00 50 72 69 6E 74 65 6D 70 73 00 00 00    5 | ....Printemps...
-                    6 | 00 00 00 00 00 00 00 00 54 72 69 73 74 61 6E 00    6 | ........Tristan.
-                    7 | 00 00 00 00 00 00 00 00 00 00 00 00 4F 75 74 6C    7 | ............Outl
-                    8 | 61 77 00 00 00 00 00 00 00 00 00 00 00 00 00 00    8 | aw..............
-                    9 | 48 75 72 72 69 63 61 6E 65 00 00 00 00 00 00 00    9 | Hurricane.......
-                    A | 00 00 00 00 52 61 67 69 6E 67 00 00 00 00 00 00    A | ....Raging......
-                    B | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    B | ....------------
-                */
-                case 0x03:
-                {
-                    // Name Data starting at 0x18
-                    break;
-                }
-                /*
-                [2023-11-13 12:33:15] Incoming packet 0x074:
-                        |  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F      | 0123456789ABCDEF
-                    -----------------------------------------------------  ----------------------
-                    0 | 74 5A 99 04 03 00 00 00 00 00 00 00 00 00 00 00    0 | tZ..............
-                    1 | 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    1 | ................
-                    2 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    2 | ................
-                    3 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    3 | ................
-                    4 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    4 | ................
-                    5 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    5 | ................
-                    6 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    6 | ................
-                    7 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    7 | ................
-                    8 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    8 | ................
-                    9 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    9 | ................
-                    A | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    A | ................
-                    B | 00 00 00 00 -- -- -- -- -- -- -- -- -- -- -- --    B | ....------------
-                */
-                case 0x04:
-                {
-                    packet->ref<uint8>(0x04) = 0x9B;
-                    packet->ref<uint8>(0x05) = 0x60;
-                    packet->ref<uint8>(0x06) = 0x04;
-                    packet->ref<uint8>(0x07) = 0x01;
-                    packet->ref<uint8>(0x08) = 0x9B;
-                    packet->ref<uint8>(0x30) = 0x01;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-
-            PChar->pushPacket(std::move(packet));
-        }
-    }
-}
-
-/************************************************************************
- *                                                                        *
  *  Guild Purchase                                                        *
  *                                                                        *
  ************************************************************************/
@@ -4313,21 +3848,6 @@ void SmallPacket0x0AA(MapSession* const PSession, CCharEntity* const PChar, CBas
         }
     }
     // TODO: error messages!
-}
-
-/************************************************************************
- *                                                                       *
- *  Dice Roll                                                            *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x0A2(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    uint16 diceroll = xirand::GetRandomNumber(1000);
-
-    PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE_SELF, std::make_unique<CMessageStandardPacket>(PChar, diceroll, MsgStd::DiceRoll));
 }
 
 /************************************************************************
@@ -4773,85 +4293,6 @@ void SmallPacket0x0B6(MapSession* const PSession, CCharEntity* const PChar, CBas
             }
         });
         // clang-format on
-    }
-}
-
-/************************************************************************
- *                                                                       *
- *  Merit Mode (Setting of exp or limit points mode.)                    *
- *                                                                       *
- ************************************************************************/
-
-void SmallPacket0x0BE(MapSession* const PSession, CCharEntity* const PChar, CBasicPacket& data)
-{
-    TracyZoneScoped;
-
-    uint8 operation = data.ref<uint8>(0x05);
-
-    switch (data.ref<uint8>(0x04))
-    {
-        case 2: // change mode
-        {
-            // TODO: you can switch mode anywhere except in besieged & under level restriction
-            if (db::preparedStmt("UPDATE char_exp SET mode = ? WHERE charid = ? LIMIT 1", operation, PChar->id))
-            {
-                PChar->MeritMode = operation;
-                PChar->pushPacket<CMenuMeritPacket>(PChar);
-                PChar->pushPacket<CMonipulatorPacket1>(PChar);
-                PChar->pushPacket<CMonipulatorPacket2>(PChar);
-            }
-        }
-        break;
-        case 3: // change merit
-        {
-            if (PChar->m_moghouseID)
-            {
-                MERIT_TYPE merit = (MERIT_TYPE)(data.ref<uint16>(0x06) << 1);
-
-                if (PChar->PMeritPoints->IsMeritExist(merit))
-                {
-                    const Merit_t* PMerit = PChar->PMeritPoints->GetMerit(merit);
-
-                    switch (operation)
-                    {
-                        case 0:
-                            PChar->PMeritPoints->LowerMerit(merit);
-                            PChar->pushPacket<CMessageBasicPacket>(PChar, PChar, data.ref<uint16>(0x06), PMerit->count, MSGBASIC_MERIT_DECREASE);
-                            break;
-                        case 1:
-                            PChar->PMeritPoints->RaiseMerit(merit);
-                            PChar->pushPacket<CMessageBasicPacket>(PChar, PChar, data.ref<uint16>(0x06), PMerit->count, MSGBASIC_MERIT_INCREASE);
-                            break;
-                    }
-                    PChar->pushPacket<CMenuMeritPacket>(PChar);
-                    PChar->pushPacket<CMonipulatorPacket1>(PChar);
-                    PChar->pushPacket<CMonipulatorPacket2>(PChar);
-                    PChar->pushPacket<CMeritPointsCategoriesPacket>(PChar, merit);
-
-                    charutils::SaveCharExp(PChar, PChar->GetMJob());
-                    PChar->PMeritPoints->SaveMeritPoints(PChar->id);
-
-                    charutils::BuildingCharSkillsTable(PChar);
-                    charutils::CalculateStats(PChar);
-                    charutils::CheckValidEquipment(PChar);
-                    charutils::BuildingCharAbilityTable(PChar);
-                    charutils::BuildingCharTraitsTable(PChar);
-
-                    PChar->UpdateHealth();
-                    PChar->addHP(PChar->GetMaxHP());
-                    PChar->addMP(PChar->GetMaxMP());
-                    PChar->pushPacket<CCharStatusPacket>(PChar);
-                    PChar->pushPacket<CCharStatsPacket>(PChar);
-                    PChar->pushPacket<CCharSkillsPacket>(PChar);
-                    PChar->pushPacket<CCharRecastPacket>(PChar);
-                    PChar->pushPacket<CCharAbilitiesPacket>(PChar);
-                    PChar->pushPacket<CCharJobExtraPacket>(PChar, true);
-                    PChar->pushPacket<CCharJobExtraPacket>(PChar, true);
-                    PChar->pushPacket<CCharSyncPacket>(PChar);
-                }
-            }
-        }
-        break;
     }
 }
 
@@ -5544,10 +4985,10 @@ void PacketParserInitialize()
     PacketSize[0x00A] = 0x2E; PacketParser[0x00A] = &SmallPacket0x00A;
     PacketSize[0x00C] = 0x00; PacketParser[0x00C] = &SmallPacket0x00C;
     PacketSize[0x00D] = 0x04; PacketParser[0x00D] = &ValidatedPacketHandler<GP_CLI_COMMAND_NETEND>;
-    PacketSize[0x00F] = 0x00; PacketParser[0x00F] = &SmallPacket0x00F;
-    PacketSize[0x011] = 0x00; PacketParser[0x011] = &SmallPacket0x011;
-    PacketSize[0x015] = 0x10; PacketParser[0x015] = &SmallPacket0x015;
-    PacketSize[0x016] = 0x04; PacketParser[0x016] = &SmallPacket0x016;
+    PacketSize[0x00F] = 0x00; PacketParser[0x00F] = &ValidatedPacketHandler<GP_CLI_COMMAND_CLSTAT>;
+    PacketSize[0x011] = 0x00; PacketParser[0x011] = &ValidatedPacketHandler<GP_CLI_COMMAND_ZONE_TRANSITION>;
+    PacketSize[0x015] = 0x10; PacketParser[0x015] = &ValidatedPacketHandler<GP_CLI_COMMAND_POS>;
+    PacketSize[0x016] = 0x04; PacketParser[0x016] = &ValidatedPacketHandler<GP_CLI_COMMAND_CHARREQ>;
     PacketSize[0x017] = 0x00; PacketParser[0x017] = &ValidatedPacketHandler<GP_CLI_COMMAND_CHARREQ2>;
     PacketSize[0x01A] = 0x0E; PacketParser[0x01A] = &SmallPacket0x01A;
     PacketSize[0x01B] = 0x00; PacketParser[0x01B] = &ValidatedPacketHandler<GP_CLI_COMMAND_FRIENDPASS>;
@@ -5568,7 +5009,7 @@ void PacketParserInitialize()
     PacketSize[0x03C] = 0x00; PacketParser[0x03C] = &SmallPacket0x03C;
     PacketSize[0x03D] = 0x00; PacketParser[0x03D] = &SmallPacket0x03D;
     PacketSize[0x041] = 0x00; PacketParser[0x041] = &ValidatedPacketHandler<GP_CLI_COMMAND_TROPHY_ENTRY>;
-    PacketSize[0x042] = 0x00; PacketParser[0x042] = &SmallPacket0x042;
+    PacketSize[0x042] = 0x00; PacketParser[0x042] = &ValidatedPacketHandler<GP_CLI_COMMAND_TROPHY_ABSENCE>;
     PacketSize[0x04B] = 0x00; PacketParser[0x04B] = &SmallPacket0x04B;
     PacketSize[0x04D] = 0x00; PacketParser[0x04D] = &SmallPacket0x04D;
     PacketSize[0x04E] = 0x1E; PacketParser[0x04E] = &SmallPacket0x04E;
@@ -5578,13 +5019,13 @@ void PacketParserInitialize()
     PacketSize[0x053] = 0x44; PacketParser[0x053] = &SmallPacket0x053;
     PacketSize[0x058] = 0x0A; PacketParser[0x058] = &ValidatedPacketHandler<GP_CLI_COMMAND_RECIPE>;
     PacketSize[0x059] = 0x00; PacketParser[0x059] = &ValidatedPacketHandler<GP_CLI_COMMAND_EFFECTEND>;
-    PacketSize[0x05A] = 0x02; PacketParser[0x05A] = &SmallPacket0x05A;
+    PacketSize[0x05A] = 0x02; PacketParser[0x05A] = &ValidatedPacketHandler<GP_CLI_COMMAND_REQCONQUEST>;
     PacketSize[0x05B] = 0x0A; PacketParser[0x05B] = &SmallPacket0x05B;
     PacketSize[0x05C] = 0x00; PacketParser[0x05C] = &SmallPacket0x05C;
     PacketSize[0x05D] = 0x08; PacketParser[0x05D] = &SmallPacket0x05D;
     PacketSize[0x05E] = 0x0C; PacketParser[0x05E] = &SmallPacket0x05E;
     PacketSize[0x060] = 0x00; PacketParser[0x060] = &SmallPacket0x060;
-    PacketSize[0x061] = 0x04; PacketParser[0x061] = &SmallPacket0x061;
+    PacketSize[0x061] = 0x04; PacketParser[0x061] = &ValidatedPacketHandler<GP_CLI_COMMAND_CLISTATUS>;
     PacketSize[0x063] = 0x00; PacketParser[0x063] = &ValidatedPacketHandler<GP_CLI_COMMAND_DIG>;
     PacketSize[0x064] = 0x26; PacketParser[0x064] = &SmallPacket0x064;
     PacketSize[0x066] = 0x0A; PacketParser[0x066] = &ValidatedPacketHandler<GP_CLI_COMMAND_FISHING>;
@@ -5600,10 +5041,10 @@ void PacketParserInitialize()
     PacketSize[0x084] = 0x06; PacketParser[0x084] = &SmallPacket0x084;
     PacketSize[0x085] = 0x04; PacketParser[0x085] = &SmallPacket0x085;
     PacketSize[0x096] = 0x12; PacketParser[0x096] = &SmallPacket0x096;
-    PacketSize[0x09B] = 0x00; PacketParser[0x09B] = &SmallPacket0x09B;
+    PacketSize[0x09B] = 0x00; PacketParser[0x09B] = &ValidatedPacketHandler<GP_CLI_COMMAND_CHOCOBO_RACE_REQ>;
     PacketSize[0x0A0] = 0x00; PacketParser[0x0A0] = &ValidatedPacketHandler<GP_CLI_COMMAND_SWITCH_PROPOSAL>;
     PacketSize[0x0A1] = 0x00; PacketParser[0x0A1] = &ValidatedPacketHandler<GP_CLI_COMMAND_SWITCH_VOTE>;
-    PacketSize[0x0A2] = 0x00; PacketParser[0x0A2] = &SmallPacket0x0A2;
+    PacketSize[0x0A2] = 0x00; PacketParser[0x0A2] = &ValidatedPacketHandler<GP_CLI_COMMAND_DICE>;
     PacketSize[0x0AA] = 0x00; PacketParser[0x0AA] = &SmallPacket0x0AA;
     PacketSize[0x0AB] = 0x00; PacketParser[0x0AB] = &SmallPacket0x0AB;
     PacketSize[0x0AC] = 0x00; PacketParser[0x0AC] = &SmallPacket0x0AC;
@@ -5611,7 +5052,7 @@ void PacketParserInitialize()
     PacketSize[0x0B5] = 0x00; PacketParser[0x0B5] = &SmallPacket0x0B5;
     PacketSize[0x0B6] = 0x00; PacketParser[0x0B6] = &SmallPacket0x0B6;
     PacketSize[0x0B7] = 0x00; PacketParser[0x0B7] = &ValidatedPacketHandler<GP_CLI_COMMAND_ASSIST_CHANNEL>;
-    PacketSize[0x0BE] = 0x00; PacketParser[0x0BE] = &SmallPacket0x0BE;
+    PacketSize[0x0BE] = 0x00; PacketParser[0x0BE] = &ValidatedPacketHandler<GP_CLI_COMMAND_MERITS>;
     PacketSize[0x0BF] = 0x04; PacketParser[0x0BF] = &ValidatedPacketHandler<GP_CLI_COMMAND_JOB_POINTS_SPEND>;
     PacketSize[0x0C0] = 0x00; PacketParser[0x0C0] = &ValidatedPacketHandler<GP_CLI_COMMAND_JOB_POINTS_REQ>;
     PacketSize[0x0C3] = 0x00; PacketParser[0x0C3] = &SmallPacket0x0C3;
