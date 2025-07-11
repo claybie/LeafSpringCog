@@ -39,6 +39,14 @@ set(PACKET_C2S_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/0x063_dig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x063_dig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x066_fishing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x078_group_checkid.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x078_group_checkid.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x083_shop_buy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x083_shop_buy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x084_shop_sell_req.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x084_shop_sell_req.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x085_shop_sell_set.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x085_shop_sell_set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x09b_chocobo_race_req.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x09b_chocobo_race_req.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a0_switch_proposal.cpp
@@ -49,6 +57,18 @@ set(PACKET_C2S_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0a2_dice.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0b7_assist_channel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0b7_assist_channel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0aa_guild_buy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0aa_guild_buy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ab_guild_buylist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ab_guild_buylist.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ac_guild_sell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ac_guild_sell.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ad_guild_selllist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0ad_guild_selllist.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0b5_chat_std.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0b5_chat_std.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0b6_chat_name.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/0x0b6_chat_name.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0be_merits.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0be_merits.h
     ${CMAKE_CURRENT_SOURCE_DIR}/0x0bf_job_points_spend.cpp
