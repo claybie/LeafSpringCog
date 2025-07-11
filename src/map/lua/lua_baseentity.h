@@ -248,7 +248,7 @@ public:
 
     void createShop(uint8 size, sol::object const& arg1);
     void addShopItem(uint16 itemID, double rawPrice, sol::object const& arg2, sol::object const& arg3);
-    auto getCurrentGPItem(uint8 guildID) -> std::tuple<uint16, uint16>;
+    auto getCurrentGPItem(uint8 guildId) const -> std::tuple<uint16, uint16>;
     bool breakLinkshell(std::string const& lsname);
     bool addLinkpearl(std::string const& lsname, bool equip);
 
@@ -478,7 +478,7 @@ public:
     void  addAssaultPoint(uint8 region, int32 points);
     void  delAssaultPoint(uint8 region, int32 points);
 
-    auto addGuildPoints(uint8 guildID, uint8 slotID) -> std::tuple<uint8, int16>;
+    auto addGuildPoints(uint8 guildId, uint8 slotId) const -> std::tuple<uint8, int16>;
 
     // Health and Status
     int32 getHP();

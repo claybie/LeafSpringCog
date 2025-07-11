@@ -4589,20 +4589,18 @@ void CLuaBaseEntity::addShopItem(uint16 itemID, double rawPrice, sol::object con
  *  Notes   :
  ************************************************************************/
 
-auto CLuaBaseEntity::getCurrentGPItem(uint8 guildID) -> std::tuple<uint16, uint16>
+auto CLuaBaseEntity::getCurrentGPItem(const uint8 guildId) const -> std::tuple<uint16, uint16>
 {
-    if (m_PBaseEntity->objtype != TYPE_PC)
+    if (auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity))
     {
-        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
-        return { 0, 0 };
+        const CGuild* PGuild           = guildutils::GetGuild(guildId);
+        auto [itemId, remainingPoints] = PGuild->getDailyGPItem(PChar);
+
+        return { itemId, remainingPoints };
     }
 
-    CGuild*      PGuild = guildutils::GetGuild(guildID);
-    CCharEntity* PChar  = static_cast<CCharEntity*>(m_PBaseEntity);
-
-    auto GPItem = PGuild->getDailyGPItem(PChar);
-
-    return { GPItem.first, GPItem.second };
+    ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
+    return { 0, 0 };
 }
 
 /************************************************************************
@@ -9619,20 +9617,18 @@ void CLuaBaseEntity::delAssaultPoint(uint8 region, int32 points)
  *  Notes   :
  ************************************************************************/
 
-auto CLuaBaseEntity::addGuildPoints(uint8 guildID, uint8 slotID) -> std::tuple<uint8, int16>
+auto CLuaBaseEntity::addGuildPoints(const uint8 guildId, const uint8 slotId) const -> std::tuple<uint8, int16>
 {
-    if (m_PBaseEntity->objtype != TYPE_PC)
+    if (auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity))
     {
-        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
-        return { 0, 0 };
+        const CGuild* PGuild              = guildutils::GetGuild(guildId);
+        auto [itemQuantity, earnedPoints] = PGuild->addGuildPoints(PChar, PChar->TradeContainer->getItem(slotId));
+
+        return { itemQuantity, earnedPoints };
     }
 
-    CGuild* PGuild = guildutils::GetGuild(guildID);
-    auto*   PChar  = static_cast<CCharEntity*>(m_PBaseEntity);
-
-    std::pair<uint8, uint16> gpResult = PGuild->addGuildPoints(PChar, PChar->TradeContainer->getItem(slotID));
-
-    return { gpResult.first, gpResult.second };
+    ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
+    return { 0, 0 };
 }
 
 /************************************************************************
