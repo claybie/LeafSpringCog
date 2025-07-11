@@ -38,10 +38,11 @@ effectObject.onEffectTick = function(target, effect)
     -- Logout to Shutdown or vice versa.
     -- This has no bearing on the way the player gets disconnected
     -- but it does change the message displayed.
-    if effect:getTickCount() > 5 then
+    local elapsedTicks = effect:getTickCount()
+    if elapsedTicks > 5 then
         target:leaveGame()
     else
-        target:messageSystem(messages[effect:getPower()], 30 - effect:getTickCount() * 5)
+        target:messageSystem(messages[effect:getPower()], 30 - elapsedTicks * 5)
     end
 end
 

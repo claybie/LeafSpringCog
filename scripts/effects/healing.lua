@@ -57,7 +57,7 @@ end
 effectObject.onEffectTick = function(target, effect)
     local healtime = effect:getTickCount()
 
-    if healtime > 2 then
+    if healtime > 1 then
         -- Avatars cancel healing on first healing tick if summoned
         local pet = target:getPet()
         if pet ~= nil then
