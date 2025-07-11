@@ -436,7 +436,7 @@ namespace charutils
                                "moghancement, "
                                "UNIX_TIMESTAMP(`lastupdate`) AS lastonline "
                                "FROM chars "
-                               "WHERE charid = (?)";
+                               "WHERE charid = ?";
 
         auto rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -519,7 +519,7 @@ namespace charutils
                    "fame_adoulin,"
                    "unity_leader "
                    "FROM char_profile "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -567,7 +567,7 @@ namespace charutils
                    "wardrobe7,"
                    "wardrobe8 "
                    "FROM char_storage "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -598,7 +598,7 @@ namespace charutils
         // TODO: LoadFromCharLookSQL
         fmtQuery = "SELECT face, race, size, head, body, hands, legs, feet, main, sub, ranged "
                    "FROM char_look "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -620,7 +620,7 @@ namespace charutils
         }
 
         // LoadFromCharStyleSQL
-        fmtQuery = "SELECT head, body, hands, legs, feet, main, sub, ranged FROM char_style WHERE charid = (?)";
+        fmtQuery = "SELECT head, body, hands, legs, feet, main, sub, ranged FROM char_style WHERE charid = ?";
         rset     = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
         {
@@ -637,7 +637,7 @@ namespace charutils
         // LoadFromCharJobsSQL
         fmtQuery = "SELECT unlocked, genkai, war, mnk, whm, blm, rdm, thf, pld, drk, bst, brd, rng, sam, nin, drg, smn, blu, cor, pup, dnc, sch, geo, run "
                    "FROM char_jobs "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -672,7 +672,7 @@ namespace charutils
         // LoadFromCharExpSQL
         fmtQuery = "SELECT mode, war, mnk, whm, blm, rdm, thf, pld, drk, bst, brd, rng, sam, nin, drg, smn, blu, cor, pup, dnc, sch, geo, run, merits, limits "
                    "FROM char_exp "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -709,7 +709,7 @@ namespace charutils
         // TODO: LoadFromCharStatsSQL
         fmtQuery = "SELECT mjob, sjob, hp, mp, mhflag, title, bazaar_message, zoning, "
                    "pet_id, pet_type, pet_hp, pet_mp, pet_level "
-                   "FROM char_stats WHERE charid = (?)";
+                   "FROM char_stats WHERE charid = ?";
 
         uint8 zoning = 0;
         rset         = db::preparedStmt(fmtQuery, PChar->id);
@@ -772,7 +772,7 @@ namespace charutils
         PChar->SetSLevel(PChar->jobs.job[PChar->GetSJob()]);
 
         // TODO: LoadFromCharRecastSQL
-        fmtQuery = "SELECT id, time, recast FROM char_recast WHERE charid = (?)";
+        fmtQuery = "SELECT id, time, recast FROM char_recast WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount())
@@ -800,7 +800,7 @@ namespace charutils
         // TODO: LoadFromCharSkillsSQL
         fmtQuery = "SELECT skillid, value, rank "
                    "FROM char_skills "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount())
@@ -824,7 +824,7 @@ namespace charutils
                    "campaign_sandy, campaign_bastok, campaign_windy, homepoints, survivals, "
                    "abyssea_conflux, waypoints, eschan_portals, claimed_deeds, unique_event "
                    "FROM char_unlocks "
-                   "WHERE charid = (?)";
+                   "WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -853,14 +853,14 @@ namespace charutils
         PChar->PMeritPoints->SetLimitPoints(limitPoints);
         PChar->PJobPoints = std::make_unique<CJobPoints>(PChar);
 
-        rset = db::preparedStmt("SELECT field_chocobo FROM char_pet WHERE charid = (?)", PChar->id);
+        rset = db::preparedStmt("SELECT field_chocobo FROM char_pet WHERE charid = ?", PChar->id);
         if (rset && rset->rowsCount() && rset->next())
         {
             PChar->m_FieldChocobo = rset->get<uint32>("field_chocobo");
         }
 
         // TODO: LoadCharFlagsFromSQL
-        fmtQuery = "SELECT gmModeEnabled, gmHiddenEnabled FROM char_flags WHERE charid = (?)";
+        fmtQuery = "SELECT gmModeEnabled, gmHiddenEnabled FROM char_flags WHERE charid = ?";
 
         rset = db::preparedStmt(fmtQuery, PChar->id);
         if (rset && rset->rowsCount() && rset->next())
@@ -938,7 +938,7 @@ namespace charutils
                                  "FROM char_spells "
                                  "JOIN spell_list "
                                  "ON spell_list.spellid = char_spells.spellid "
-                                 "WHERE charid = (?) AND "
+                                 "WHERE charid = ? AND "
                                  "(spell_list.content_tag IN ({}) OR "
                                  "spell_list.content_tag IS NULL)",
                                  fmt::join(enabledExpansions, ","));
@@ -976,7 +976,7 @@ namespace charutils
                             "signature, "
                             "extra "
                             "FROM char_inventory "
-                            "WHERE charid = (?) "
+                            "WHERE charid = ? "
                             "ORDER BY FIELD(location,0,1,9,2,3,4,5,6,7,8,10,11,12)";
 
         auto rset = db::preparedStmt(query, PChar->id);
@@ -1075,7 +1075,7 @@ namespace charutils
                             "equipslotid,"
                             "containerid "
                             "FROM char_equip "
-                            "WHERE charid = (?)";
+                            "WHERE charid = ?";
 
         auto rset = db::preparedStmt(Query, PChar->id);
         if (rset)
@@ -1137,7 +1137,7 @@ namespace charutils
 
             if (PLinkshell1)
             {
-                rset = db::preparedStmt("SELECT broken FROM linkshells WHERE linkshellid = (?) LIMIT 1", PLinkshell1->GetLSID());
+                rset = db::preparedStmt("SELECT broken FROM linkshells WHERE linkshellid = ? LIMIT 1", PLinkshell1->GetLSID());
                 if (rset && rset->rowsCount() && rset->next() && rset->get<uint32>("broken") == 1)
                 { // if the linkshell has been broken, unequip
                     uint8 SlotID     = PLinkshell1->getSlotID();
@@ -1155,7 +1155,7 @@ namespace charutils
 
             if (PLinkshell2)
             {
-                rset = db::preparedStmt("SELECT broken FROM linkshells WHERE linkshellid = (?) LIMIT 1", PLinkshell2->GetLSID());
+                rset = db::preparedStmt("SELECT broken FROM linkshells WHERE linkshellid = ? LIMIT 1", PLinkshell2->GetLSID());
                 if (rset && rset->rowsCount() && rset->next() && rset->get<uint32>("broken") == 1)
                 { // if the linkshell has been broken, unequip
                     uint8 SlotID     = PLinkshell2->getSlotID();
@@ -2634,25 +2634,25 @@ namespace charutils
             return;
         }
 
-        const char* Query = "REPLACE INTO char_equip_saved SET \
-                                    charid = %u, \
-                                    jobid = %u, \
-                                    main = %u, \
-                                    sub = %u, \
-                                    ranged = %u, \
-                                    ammo = %u, \
-                                    head = %u, \
-                                    body = %u, \
-                                    hands = %u, \
-                                    legs = %u, \
-                                    feet = %u, \
-                                    neck = %u, \
-                                    waist = %u, \
-                                    ear1 = %u, \
-                                    ear2 = %u, \
-                                    ring1 = %u, \
-                                    ring2 = %u, \
-                                    back = %u";
+        const char* Query = "REPLACE INTO char_equip_saved SET "
+                            "charid = %u, "
+                            "jobid = %u, "
+                            "main = %u, "
+                            "sub = %u, "
+                            "ranged = %u, "
+                            "ammo = %u, "
+                            "head = %u, "
+                            "body = %u, "
+                            "hands = %u, "
+                            "legs = %u, "
+                            "feet = %u, "
+                            "neck = %u, "
+                            "waist = %u, "
+                            "ear1 = %u, "
+                            "ear2 = %u, "
+                            "ring1 = %u, "
+                            "ring2 = %u, "
+                            "back = %u";
 
         auto getEquipIdFromSlot = [](CCharEntity* PChar, SLOTTYPE slot) -> uint16
         {
@@ -6979,9 +6979,7 @@ namespace charutils
     {
         TracyZoneScoped;
 
-        auto fmtQuery = "UPDATE char_unlocks SET traverser_start = CURRENT_TIMESTAMP() WHERE charid = %u";
-
-        _sql->Query(fmtQuery, PChar->id);
+        db::preparedStmt("UPDATE char_unlocks SET traverser_start = CURRENT_TIMESTAMP() WHERE charid = ?", PChar->id);
     }
 
     uint32 getClaimedTraverserStones(CCharEntity* PChar)
@@ -7003,18 +7001,14 @@ namespace charutils
     {
         TracyZoneScoped;
 
-        auto fmtQuery = "UPDATE char_unlocks SET traverser_claimed = traverser_claimed + %u WHERE charid = %u";
-
-        _sql->Query(fmtQuery, numStones, PChar->id);
+        db::preparedStmt("UPDATE char_unlocks SET traverser_claimed = traverser_claimed + ? WHERE charid = ?", numStones, PChar->id);
     }
 
     void setClaimedTraverserStones(CCharEntity* PChar, uint16 stoneTotal)
     {
         TracyZoneScoped;
 
-        auto fmtQuery = "UPDATE char_unlocks SET traverser_claimed = %u WHERE charid = %u";
-
-        _sql->Query(fmtQuery, stoneTotal, PChar->id);
+        db::preparedStmt("UPDATE char_unlocks SET traverser_claimed = ? WHERE charid = ?", stoneTotal, PChar->id);
     }
 
     uint32 getAvailableTraverserStones(CCharEntity* PChar)
@@ -7397,12 +7391,12 @@ namespace charutils
             }
 
             PChar->PSession->shuttingDown = 1;
-            _sql->Query("UPDATE char_stats SET zoning = 0 WHERE charid = %u", PChar->id);
+            db::preparedStmt("UPDATE char_stats SET zoning = 0 WHERE charid = ?", PChar->id);
         }
         else
         {
             PChar->PSession->shuttingDown = 2;
-            _sql->Query("UPDATE char_stats SET zoning = 1 WHERE charid = %u", PChar->id);
+            db::preparedStmt("UPDATE char_stats SET zoning = 1 WHERE charid = ?", PChar->id);
             charutils::CheckEquipLogic(PChar, SCRIPT_CHANGEZONE, PChar->getZone());
         }
 

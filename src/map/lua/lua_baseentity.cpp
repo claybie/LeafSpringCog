@@ -18966,7 +18966,7 @@ auto CLuaBaseEntity::getContestRewardStatus() -> sol::table
     {
         std::string Query = "SELECT contestrank, share "
                             "FROM   fishing_contest_entries "
-                            "WHERE  charid = (?) "
+                            "WHERE  charid = ? "
                             "AND    claimed != 1";
 
         auto ret = db::preparedStmt(Query, PChar->id);

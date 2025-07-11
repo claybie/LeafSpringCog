@@ -1623,7 +1623,7 @@ void CStatusEffectContainer::LoadStatusEffects()
                         "flags, "
                         "timestamp "
                         "FROM char_effects "
-                        "WHERE charid = (?)";
+                        "WHERE charid = ?";
 
     auto rset = db::preparedStmt(Query, m_POwner->id);
 

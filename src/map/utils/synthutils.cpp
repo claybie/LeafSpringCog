@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -195,39 +195,39 @@ namespace synthutils
 
         // TODO: If we limit by ID ranges, we could use multiple threads to load the recipes
 
-        const auto rset = db::preparedStmt("SELECT \
-            ID, \
-            Desynth, \
-            KeyItem, \
-            Wood, \
-            Smith, \
-            Gold, \
-            Cloth, \
-            Leather, \
-            Bone, \
-            Alchemy, \
-            Cook, \
-            Crystal, \
-            HQCrystal, \
-            Ingredient1, \
-            Ingredient2, \
-            Ingredient3, \
-            Ingredient4, \
-            Ingredient5, \
-            Ingredient6, \
-            Ingredient7, \
-            Ingredient8, \
-            Result, \
-            ResultHQ1, \
-            ResultHQ2, \
-            ResultHQ3, \
-            ResultQty, \
-            ResultHQ1Qty, \
-            ResultHQ2Qty, \
-            ResultHQ3Qty, \
-            ResultName, \
-            content_tag \
-            FROM synth_recipes");
+        const auto rset = db::preparedStmt("SELECT "
+                                           "ID, "
+                                           "Desynth, "
+                                           "KeyItem, "
+                                           "Wood, "
+                                           "Smith, "
+                                           "Gold, "
+                                           "Cloth, "
+                                           "Leather, "
+                                           "Bone, "
+                                           "Alchemy, "
+                                           "Cook, "
+                                           "Crystal, "
+                                           "HQCrystal, "
+                                           "Ingredient1, "
+                                           "Ingredient2, "
+                                           "Ingredient3, "
+                                           "Ingredient4, "
+                                           "Ingredient5, "
+                                           "Ingredient6, "
+                                           "Ingredient7, "
+                                           "Ingredient8, "
+                                           "Result, "
+                                           "ResultHQ1, "
+                                           "ResultHQ2, "
+                                           "ResultHQ3, "
+                                           "ResultQty, "
+                                           "ResultHQ1Qty, "
+                                           "ResultHQ2Qty, "
+                                           "ResultHQ3Qty, "
+                                           "ResultName, "
+                                           "content_tag "
+                                           "FROM synth_recipes");
 
         if (!rset || !rset->rowsCount())
         {

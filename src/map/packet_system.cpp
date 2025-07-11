@@ -1954,7 +1954,7 @@ void SmallPacket0x04B(MapSession* const PSession, CCharEntity* const PChar, CBas
         PChar->pushPacket<CCharSyncPacket>(PChar);
 
         // TODO: kill player til theyre dead and bsod
-        const auto rset = db::preparedStmt("SELECT version_mismatch FROM accounts_sessions WHERE charid = (?)", PChar->id);
+        const auto rset = db::preparedStmt("SELECT version_mismatch FROM accounts_sessions WHERE charid = ?", PChar->id);
         if (rset && rset->rowsCount() > 0 && rset->next())
         {
             if (rset->get<bool>("version_mismatch"))
