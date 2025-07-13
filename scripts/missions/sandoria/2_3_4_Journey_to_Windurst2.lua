@@ -63,6 +63,7 @@ mission.sections =
 
                 [246] = function(player, csid, option, npc)
                     player:setMissionStatus(mission.areaId, 10)
+                    player:addSpell(xi.magic.spell.KUPIPI)
                 end,
             },
         },

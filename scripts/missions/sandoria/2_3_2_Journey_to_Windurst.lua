@@ -87,9 +87,10 @@ mission.sections =
                 end,
 
                 [238] = function(player, csid, option, npc)
+
                     player:setMissionStatus(mission.areaId, 5)
                     npcUtil.giveKeyItem(player, xi.ki.SHIELD_OFFERING)
-
+                    player:addSpell(xi.magic.spell.KUPIPI)
                     if
                         xi.settings.main.ENABLE_TRUST_QUESTS == 1 and
                         not player:hasSpell(xi.magic.spell.SEMIH_LAFIHNA) and

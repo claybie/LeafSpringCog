@@ -127,7 +127,9 @@ mission.sections =
                 [714] = function(player, csid, option, npc)
                     if mission:complete(player) then
                         player:delKeyItem(xi.ki.KINDRED_REPORT)
+                        player:addSpell(xi.magic.spell.SEMIH_LAFIHNA)
                     end
+
                 end,
             },
         },

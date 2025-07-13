@@ -183,6 +183,7 @@ quest.sections =
                     -- title-changing NPC after the quest has been completed.
                     player:addTitle(xi.title.TOTAL_LOSER)
                     quest:complete(player)
+                    player:addSpell(xi.magic.spell.SHANTOTTO)
                 end,
             },
         },

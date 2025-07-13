@@ -135,8 +135,12 @@ mission.sections =
                         then
                             -- Don't add missions we already completed. Players who change nation will hit this.
                             player:addMission(xi.mission.log_id.ZILART, xi.mission.id.zilart.THE_NEW_FRONTIER)
+                            -- Add Zeid as completion reward. Did not make since in storyline to do so pre-fight.
+                            player:addSpell(xi.magic.spell.ZEID)
                         end
 
+                        -- Add Zeid as completion reward. Did not make since in storyline to do so pre-fight.
+                        player:addSpell(xi.magic.spell.ZEID)
                         -- TODO: This is most likely a pos change and onZoneIn
                         player:startEvent(7)
                     end

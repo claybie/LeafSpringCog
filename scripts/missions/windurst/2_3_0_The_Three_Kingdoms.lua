@@ -138,6 +138,8 @@ mission.sections =
 
                 [101] = function(player, csid, option, npc)
                     if mission:complete(player) then
+                        player:addSpell(xi.magic.spell.KUPIPI)
+                        player:addSpell(xi.magic.spell.SEMIH_LAFIHNA)
                         player:delKeyItem(xi.ki.KINDRED_REPORT)
                     end
                 end,
