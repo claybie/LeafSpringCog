@@ -561,7 +561,7 @@ public:
     void            SetPlayTime(timer::duration playTime); // Set playtime
     timer::duration GetPlayTime(bool needUpdate = true);   // Get playtime
 
-    CItemEquipment* getEquip(SLOTTYPE slot);
+    auto getEquip(SLOTTYPE slot) const -> CItemEquipment*;
 
     bool requestedInfoSync = false;
 
@@ -611,7 +611,7 @@ public:
     void onTriggerAreaLeave(uint32 triggerAreaId);
     void clearTriggerAreas();
 
-    bool isInEvent();
+    auto isInEvent() const -> bool;
     bool isNpcLocked();
     void queueEvent(EventInfo* eventToQueue);
     void endCurrentEvent();
