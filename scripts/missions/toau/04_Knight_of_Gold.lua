@@ -93,6 +93,7 @@ mission.sections =
                 end,
 
                 [3026] = function(player, csid, option, npc)
+                    player:addSpell(xi.magic.spell.TRION)
                     mission:complete(player)
                 end,
 
