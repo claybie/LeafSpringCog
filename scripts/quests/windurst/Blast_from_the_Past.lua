@@ -54,6 +54,7 @@ quest.sections =
             {
                 onTrade = function(player, npc, trade)
                     if npcUtil.tradeHasExactly(trade, xi.item.BURNITE_SHELL_STONE) then
+                        player:addSpell(xi.magic.spell.KORU_MORU)
                         return quest:progressEvent(224)
                     else
                         return quest:event(225)
