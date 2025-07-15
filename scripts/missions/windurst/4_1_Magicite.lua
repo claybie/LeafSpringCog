@@ -139,6 +139,7 @@ mission.sections =
                 [152] = function(player, csid, option, npc)
                     player:setMissionStatus(mission.areaId, 3)
                     player:delKeyItem(xi.ki.LETTER_TO_ALDO)
+                    player:addSpell(xi.magic.spell.ALDO)
 
                     if not player:hasKeyItem(xi.ki.SILVER_BELL) then
                         npcUtil.giveKeyItem(player, xi.ki.SILVER_BELL)
