@@ -108,6 +108,7 @@ mission.sections =
             {
                 [710] = function(player, csid, option, npc)
                     if mission:complete(player) then
+                        player:addSpell(xi.magic.spell.NAJI)
                         player:delKeyItem(xi.ki.ZERUHN_REPORT)
                     end
                 end,

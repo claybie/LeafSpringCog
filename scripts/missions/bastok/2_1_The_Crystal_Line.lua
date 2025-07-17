@@ -154,6 +154,7 @@ mission.sections =
 
                 [712] = function(player, csid, option, npc)
                     if mission:complete(player) then
+                        player:addSpell(xi.magic.spell.AYAME)
                         player:delKeyItem(xi.ki.C_L_REPORT)
                     end
                 end,
