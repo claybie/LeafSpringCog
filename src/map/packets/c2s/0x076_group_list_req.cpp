@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,26 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#include "0x076_group_list_req.h"
 
-#include "common/cbasetypes.h"
+#include "entities/charentity.h"
+#include "packets/party_define.h"
 
-class CCharEntity;
-
-namespace blacklistutils
+auto GP_CLI_COMMAND_GROUP_LIST_REQ::validate(MapSession* PSession, const CCharEntity* PChar) const -> PacketValidationResult
 {
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
+    return PacketValidator()
+        .mustEqual(Kind, 0, "Kind not 0");
+}
 
-} // namespace blacklistutils
-
-#endif
+void GP_CLI_COMMAND_GROUP_LIST_REQ::process(MapSession* PSession, CCharEntity* PChar) const
+{
+    if (PChar->PParty)
+    {
+        PChar->PParty->ReloadPartyMembers(PChar);
+    }
+    else
+    {
+        // previous CPartyDefine was dropped or otherwise didn't work?
+        PChar->pushPacket<CPartyDefinePacket>(nullptr, false);
+    }
+}

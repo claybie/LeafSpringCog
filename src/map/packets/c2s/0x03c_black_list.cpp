@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,17 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#include "0x03c_black_list.h"
 
-#include "common/cbasetypes.h"
+#include "utils/blacklistutils.h"
 
-class CCharEntity;
-
-namespace blacklistutils
+auto GP_CLI_COMMAND_BLACK_LIST::validate(MapSession* PSession, const CCharEntity* PChar) const -> PacketValidationResult
 {
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
+    // No parameter to validate for this packet.
+    return PacketValidator();
+}
 
-} // namespace blacklistutils
-
-#endif
+void GP_CLI_COMMAND_BLACK_LIST::process(MapSession* PSession, CCharEntity* PChar) const
+{
+    blacklistutils::SendBlacklist(PChar);
+}

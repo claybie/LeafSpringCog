@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,16 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-class CCharEntity;
-
-namespace blacklistutils
-{
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
-
-} // namespace blacklistutils
-
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x0064
+// This packet is sent by the client when viewing a key item that has not been viewed before.
+// (This marks the key item as 'seen' by the client to remove the yellow bubble when looking at the menu in the future. ie. 'Mark as Read')
+GP_CLI_PACKET(GP_CLI_COMMAND_SCENARIOITEM,
+              uint32_t UniqueNo;         // PS2: UniqueNo
+              uint32_t LookItemFlag[16]; // PS2: para
+              uint16_t ActIndex;         // PS2: ActIndex
+              uint16_t TableIndex;       // PS2: Dammy
+);

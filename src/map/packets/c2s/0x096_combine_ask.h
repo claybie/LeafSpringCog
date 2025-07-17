@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,18 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-class CCharEntity;
-
-namespace blacklistutils
-{
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
-
-} // namespace blacklistutils
-
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x0096
+// This packet is sent by the client when requesting to synthesize an item.
+GP_CLI_PACKET(GP_CLI_COMMAND_COMBINE_ASK,
+              uint8_t  HashNo;     // PS2: HashNo
+              uint8_t  padding00;  // PS2: (New; did not exist.)
+              uint16_t Crystal;    // PS2: Crystal
+              uint8_t  CrystalIdx; // PS2: CrystalIdx
+              uint8_t  Items;      // PS2: Items
+              uint16_t ItemNo[8];  // PS2: ItemNo
+              uint8_t  TableNo[8]; // PS2: TableNo
+);

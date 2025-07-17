@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,18 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-class CCharEntity;
-
-namespace blacklistutils
-{
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
-
-} // namespace blacklistutils
-
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x003C
+// This packet is sent by the client when it needs to request the clients blacklist.
+GP_CLI_PACKET(GP_CLI_COMMAND_BLACK_LIST,
+              uint32_t unknown00;    // PS2: (Unknown field name.)
+              uint32_t unknown01;    // PS2: (Unknown field name.)
+              uint32_t unknown02;    // PS2: (Unknown field name.)
+              uint32_t unknown03;    // PS2: (Unknown field name.)
+              uint32_t unknown04;    // PS2: (Unknown field name.)
+              uint8_t  unknown05;    // PS2: (Unknown field name.)
+              uint8_t  padding00[3]; // PS2: (Unknown field name.)
+);

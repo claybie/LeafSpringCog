@@ -3755,6 +3755,20 @@ namespace charutils
         return PChar->keys.tables[keyItemTable].seenList[keyItemIndex];
     }
 
+    void markSeenKeyItem(CCharEntity* PChar, KeyItem keyItemId)
+    {
+        const auto keyItemTable = static_cast<uint16_t>(keyItemId) / 512;
+        const auto keyItemIndex = static_cast<uint16_t>(keyItemId) % 512;
+
+        if (keyItemTable >= MAX_KEYS_TABLE)
+        {
+            ShowWarning("Attempt to mark keyItem in table out of range (%d)!", static_cast<uint16_t>(keyItemId));
+            return;
+        }
+
+        PChar->keys.tables[keyItemTable].seenList[keyItemIndex] = true;
+    }
+
     void unseenKeyItem(CCharEntity* PChar, KeyItem keyItemId)
     {
         const auto keyItemTable = static_cast<uint16_t>(keyItemId) / 512;

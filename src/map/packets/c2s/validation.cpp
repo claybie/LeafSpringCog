@@ -139,3 +139,13 @@ auto PacketValidator::hasLinkshellRank(const CCharEntity* PChar, const uint8_t s
 
     return *this;
 }
+
+auto PacketValidator::hasZoneMiscFlag(const CCharEntity* PChar, const ZONEMISC flag) -> PacketValidator&
+{
+    if (PChar->m_GMlevel == 0 && !PChar->loc.zone->CanUseMisc(flag))
+    {
+        result_.addError(std::format("Zone {} does not allow misc flag {}.", PChar->loc.zone->getName(), static_cast<uint16_t>(flag)));
+    }
+
+    return *this;
+}

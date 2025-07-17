@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,26 @@
 ===========================================================================
 */
 
-#ifndef _BLACKLISTUTILS_H
-#define _BLACKLISTUTILS_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-class CCharEntity;
-
-namespace blacklistutils
+struct SAVE_BLACK
 {
-    auto IsBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto AddBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    auto DeleteBlacklisted(uint32 ownerId, uint32 targetId) -> bool;
-    void SendBlacklist(CCharEntity* PChar);
+    uint32_t ID;       // PS2: ID
+    uint8_t  Name[16]; // PS2: Name
+};
 
-} // namespace blacklistutils
+enum class GP_CLI_COMMAND_BLACK_EDIT_MODE : int8_t
+{
+    Add    = 0, // Adding a player to the blacklist.
+    Remove = 1, // Removing a player from the blacklist.
+};
 
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x003D
+// This packet is sent by the client when interacting with the blacklist system.
+GP_CLI_PACKET(GP_CLI_COMMAND_BLACK_EDIT,
+              SAVE_BLACK Data;         // PS2: Data
+              int8_t     Mode;         // PS2: Mode
+              uint8_t    padding00[3]; // PS2: (New; did not exist.)
+);

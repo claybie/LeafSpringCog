@@ -136,6 +136,7 @@ namespace charutils
 
     auto hasKeyItem(const CCharEntity* PChar, KeyItem keyItemId) -> bool; // checking the presence of a key item
     auto seenKeyItem(CCharEntity* PChar, KeyItem keyItemId) -> bool;      // checking whether the description of the key item has been read
+    void markSeenKeyItem(CCharEntity* PChar, KeyItem keyItemId);          // mark key item as seen (description read)
     void unseenKeyItem(CCharEntity* PChar, KeyItem keyItemId);            // attempt to remove keyitem from seen list
     void addKeyItem(CCharEntity* PChar, KeyItem keyItemId);               // add a key item
     void delKeyItem(CCharEntity* PChar, KeyItem keyItemId);               // delete a key item
