@@ -718,6 +718,8 @@ void SmallPacket0x01A(MapSession* const PSession, CCharEntity* const PChar, CBas
                     return;
                 }
 
+                // Rendering packets need to send MountIndex even after char is unmounted.
+                PChar->m_mountId = MountID ? MountID + 1 : 0;
                 PChar->StatusEffectContainer->AddStatusEffect(new CStatusEffect(
                                                                   EFFECT_MOUNTED,
                                                                   EFFECT_MOUNTED,
