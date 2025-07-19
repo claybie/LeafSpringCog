@@ -1032,6 +1032,9 @@ def configure_multi_process_by_modulus_3():
 def configure_multi_process_by_modulus_7():
     configure_multi_process_by_modulus(7)
 
+def configure_multi_process_by_modulus_300():
+    configure_multi_process_by_modulus(300)
+
 def launch_process_in_background(process_params):
     # fmt: off
 
@@ -1262,6 +1265,10 @@ def tasks_menu():
             "c": [
                 "Configure multi-process server (7 processes)",
                 configure_multi_process_by_modulus_7,
+            ],
+            "e": [
+                "Configure multi-process server (300 processes)",
+                configure_multi_process_by_modulus_300,
             ],
             "d": ["Dump Table", dump_table],
             "a": ["Dump All Tables", dump_all_tables],
