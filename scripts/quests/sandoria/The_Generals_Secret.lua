@@ -1,5 +1,5 @@
 -----------------------------------
--- A Sentry's Peril
+-- The General's Secret
 -- !addquest 0 60
 -- Curilla : !pos 27 0.1 0.1 233
 -- Hot Springs : !pos 444 -37 -18 139
@@ -59,6 +59,7 @@ quest.sections =
             {
                 [54] = function(player, csid, option, npc)
                     if quest:complete(player) then
+                        player:addSpell(xi.magic.spell.CURILLA)
                         player:delKeyItem(xi.ki.CURILLAS_BOTTLE_FULL)
                     end
                 end,
