@@ -6929,6 +6929,7 @@ uint8 CLuaBaseEntity::levelRestriction(sol::object const& level)
             charutils::BuildingCharTraitsTable(PChar);
             charutils::BuildingCharAbilityTable(PChar);
             charutils::CheckValidEquipment(PChar);
+            luautils::CheckForGearSet(PChar);
 
             PChar->updatemask |= UPDATE_HP;
 
