@@ -282,7 +282,7 @@ public:
     // Storing
     auto  getStorageItem(uint8 container, uint8 slotID, uint8 equipID) -> CItem*;
     uint8 storeWithPorterMoogle(uint16 slipId, sol::table const& extraTable, sol::table const& storableItemIdsTable);
-    auto  getRetrievableItemsForSlip(uint16 slipId) -> sol::table;
+    auto  getRetrievableItemsForSlip(uint16 slipId) const -> sol::table;
     void  retrieveItemFromSlip(uint16 slipId, uint16 itemId, uint16 extraId, uint8 extraData);
 
     // Player Appearance

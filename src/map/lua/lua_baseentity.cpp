@@ -5301,38 +5301,36 @@ uint8 CLuaBaseEntity::storeWithPorterMoogle(uint16 slipId, sol::table const& ext
  *  Notes   : See scripts/globals/porter_moogle.lua
  ************************************************************************/
 
-sol::table CLuaBaseEntity::getRetrievableItemsForSlip(uint16 slipId)
+auto CLuaBaseEntity::getRetrievableItemsForSlip(const uint16 slipId) const -> sol::table
 {
-    if (m_PBaseEntity->objtype != TYPE_PC)
+    if (const auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity))
     {
-        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
-        return {};
+        const auto slipSlotId = PChar->getStorage(LOC_INVENTORY)->SearchItem(slipId);
+
+        if (slipSlotId == ERROR_SLOTID)
+        {
+            return {};
+        }
+
+        auto* slip = PChar->getStorage(LOC_INVENTORY)->GetItem(slipSlotId);
+
+        if (slip == nullptr)
+        {
+            ShowError("Slip item was null.");
+            return {};
+        }
+
+        sol::table table = lua.create_table();
+        for (int i = 0; i < CItem::extra_size; i++)
+        {
+            table.add(slip->m_extra[i]);
+        }
+
+        return table;
     }
 
-    CCharEntity* PChar      = (CCharEntity*)m_PBaseEntity;
-    auto         slipSlotId = PChar->getStorage(LOC_INVENTORY)->SearchItem(slipId);
-
-    if (slipSlotId == 255)
-    {
-        return {};
-    }
-
-    auto* slip = PChar->getStorage(LOC_INVENTORY)->GetItem(slipSlotId);
-
-    if (slip == nullptr)
-    {
-        ShowError("Slip item was null.");
-        return {};
-    }
-
-    sol::table table = lua.create_table();
-    // TODO Is extra sized defined anywhere?
-    for (int i = 0; i < 24; i++)
-    {
-        table.add(slip->m_extra[i]);
-    }
-
-    return table;
+    ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->getName());
+    return {};
 }
 
 /************************************************************************
