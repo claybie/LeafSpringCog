@@ -36,10 +36,11 @@ mission.sections =
             ['Pherimociel'] =
             {
                 onTrigger = function(player, npc)
-                    local missionStatus = player:getMissionStatus(mission.areaId)
-
                     if player:getMissionStatus(mission.areaId) == 0 then
-                        if not mission:getMustZone(player) and VanadielUniqueDay() >= mission:getVar(player, 'Timer') then
+                        if
+                            not mission:getMustZone(player) and
+                            VanadielUniqueDay() >= mission:getVar(player, 'Timer')
+                        then
                             return mission:progressEvent(10098) -- Ship is ready.
 
                         -- Optional cutscene. Plays one time per zone until time is up. FORCES zoning, which blocks progress until you do.
@@ -97,7 +98,6 @@ mission.sections =
                     end
                 end,
             },
-
 
             onEventFinish =
             {

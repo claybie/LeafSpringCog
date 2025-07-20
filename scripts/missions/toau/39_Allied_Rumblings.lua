@@ -18,6 +18,7 @@ mission.sections =
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId
         end,
+
         [xi.zone.AHT_URHGAN_WHITEGATE] =
         {
             ['Naja_Salaheem'] =
