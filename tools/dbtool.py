@@ -1032,6 +1032,9 @@ def configure_multi_process_by_modulus_3():
 def configure_multi_process_by_modulus_7():
     configure_multi_process_by_modulus(7)
 
+def configure_multi_process_by_modulus_50():
+    configure_multi_process_by_modulus(50)
+
 def configure_multi_process_by_modulus_300():
     configure_multi_process_by_modulus(300)
 
@@ -1267,6 +1270,10 @@ def tasks_menu():
                 configure_multi_process_by_modulus_7,
             ],
             "e": [
+                "Configure multi-process server (50 processes)",
+                configure_multi_process_by_modulus_50,
+            ],
+            "u": [
                 "Configure multi-process server (300 processes)",
                 configure_multi_process_by_modulus_300,
             ],
