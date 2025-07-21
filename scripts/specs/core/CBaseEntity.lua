@@ -3444,9 +3444,10 @@ end
 function CBaseEntity:setPetName(pType, value, arg2)
 end
 
----@param value integer
+---@param color xi.chocobo.color
+---@param traits table
 ---@return nil
-function CBaseEntity:registerChocobo(value)
+function CBaseEntity:registerChocobo(color, traits)
 end
 
 ---@nodiscard
@@ -3910,6 +3911,12 @@ end
 
 ---@return nil
 function CBaseEntity:useMobAbility()
+end
+
+---@param skillId integer
+---@param PLuaBaseEntity CBaseEntity?
+---@return nil
+function CBaseEntity:usePetAbility(skillId, PLuaBaseEntity)
 end
 
 ---@nodiscard

@@ -1623,7 +1623,7 @@ void CStatusEffectContainer::LoadStatusEffects()
                         "flags, "
                         "timestamp "
                         "FROM char_effects "
-                        "WHERE charid = (?)";
+                        "WHERE charid = ?";
 
     auto rset = db::preparedStmt(Query, m_POwner->id);
 
@@ -2017,7 +2017,7 @@ void CStatusEffectContainer::TickEffects(timer::time_point tick)
         for (const auto& PStatusEffect : m_StatusEffectSet)
         {
             if (PStatusEffect->GetTickTime() != 0s &&
-                PStatusEffect->GetElapsedTickCount() <= (tick - PStatusEffect->GetStartTime()) / PStatusEffect->GetTickTime())
+                PStatusEffect->GetElapsedTickCount() < (tick - PStatusEffect->GetStartTime()) / PStatusEffect->GetTickTime())
             {
                 if (PStatusEffect->HasEffectFlag(EFFECTFLAG_AURA))
                 {

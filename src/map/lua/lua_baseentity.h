@@ -28,6 +28,7 @@
 #include "packets/position.h"
 #include "utils/charutils.h"
 
+enum class ChocoboColor : uint8_t;
 class CBaseEntity;
 class CCharEntity;
 class CLuaBattlefield;
@@ -248,7 +249,7 @@ public:
 
     void createShop(uint8 size, sol::object const& arg1);
     void addShopItem(uint16 itemID, double rawPrice, sol::object const& arg2, sol::object const& arg3);
-    auto getCurrentGPItem(uint8 guildID) -> std::tuple<uint16, uint16>;
+    auto getCurrentGPItem(uint8 guildId) const -> std::tuple<uint16, uint16>;
     bool breakLinkshell(std::string const& lsname);
     bool addLinkpearl(std::string const& lsname, bool equip);
 
@@ -281,7 +282,7 @@ public:
     // Storing
     auto  getStorageItem(uint8 container, uint8 slotID, uint8 equipID) -> CItem*;
     uint8 storeWithPorterMoogle(uint16 slipId, sol::table const& extraTable, sol::table const& storableItemIdsTable);
-    auto  getRetrievableItemsForSlip(uint16 slipId) -> sol::table;
+    auto  getRetrievableItemsForSlip(uint16 slipId) const -> sol::table;
     void  retrieveItemFromSlip(uint16 slipId, uint16 itemId, uint16 extraId, uint8 extraData);
 
     // Player Appearance
@@ -478,7 +479,7 @@ public:
     void  addAssaultPoint(uint8 region, int32 points);
     void  delAssaultPoint(uint8 region, int32 points);
 
-    auto addGuildPoints(uint8 guildID, uint8 slotID) -> std::tuple<uint8, int16>;
+    auto addGuildPoints(uint8 guildId, uint8 slotId) const -> std::tuple<uint8, int16>;
 
     // Health and Status
     int32 getHP();
@@ -787,7 +788,7 @@ public:
 
     auto getPetName() -> const std::string;
     void setPetName(uint8 pType, uint16 value, sol::object const& arg2);
-    void registerChocobo(uint32 value);
+    void registerChocobo(ChocoboColor color, sol::table const& traits) const;
 
     void petAttack(CLuaBaseEntity* PEntity);
     void petAbility(uint16 abilityID); // Function exists, but is not implemented.  Warning will be displayed.
@@ -895,6 +896,7 @@ public:
     void castSpell(sol::object const& spell, sol::object const& entity); // forces a mob to cast a spell (parameter = spell ID, otherwise picks a spell from its list)
     void useJobAbility(uint16 skillID, sol::object const& pet);          // forces a job ability use (players/pets only)
     void useMobAbility(sol::variadic_args va);                           // forces a mob to use a mobability (parameter = skill ID)
+    void usePetAbility(uint16 skillId, sol::object const& target) const; // forces a pet to use a pet ability
     auto getAbilityDistance(uint16 skillID) -> float;                    // Returns the specified distance for mob skill
     bool hasTPMoves();
     void drawIn(sol::variadic_args va); // Forces a mob to draw-in the specified target, or its current target with no args
