@@ -163,10 +163,10 @@ entity.onMobFight = function(mob, target)
 
     -- Gains a delay reduction (from 210 to 160) when health is under 10%
     if hpp <= 10 and mob:getLocalVar('appliedDelayReduction') == 0 then
-        mob:addMod(xi.mod.DELAY, 833)
+        mob:addMod(xi.mod.DELAY, -833)
         mob:setLocalVar('appliedDelayReduction', 1)
     elseif hpp > 10 and mob:getLocalVar('appliedDelayReduction') == 1 then
-        mob:delMod(xi.mod.DELAY, 833)
+        mob:delMod(xi.mod.DELAY, -833)
         mob:setLocalVar('appliedDelayReduction', 0)
     end
 
