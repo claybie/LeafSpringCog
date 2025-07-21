@@ -60,6 +60,7 @@ quest.sections =
             {
                 [509] = function(player, csid, option, npc)
                     if quest:complete(player) then
+                        player:addSpell(xi.magic.spell.CID)
                         player:delKeyItem(xi.ki.UNFINISHED_LETTER)
                     end
                 end,
