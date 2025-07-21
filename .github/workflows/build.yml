@@ -1,4 +1,4 @@
-name: "gcc build"
+name: "build"
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - base
+      - everything
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -197,7 +198,7 @@ jobs:
         run: |
           python3 tools/ci/detect_license_headers.py
 
-  LuaLanguageServer:
+  Linux_LuaLanguageServer:
     needs: Sanity_Checks
     runs-on: ubuntu-24.04
     steps:
@@ -227,7 +228,73 @@ jobs:
               exit 1
           fi
 
-  GCC14_64bit:
+  Linux_Clang18_64bit:
+    needs: Sanity_Checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common cmake libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev binutils-dev
+      - name: Cache 'build' folder
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-clang
+      - name: Configure CMake
+        run: |
+          export CC=/usr/bin/clang-18
+          export CXX=/usr/bin/clang++-18
+          mkdir -p build
+          cmake -S . -B build
+      - name: Build
+        run: |
+          cmake --build build -j4
+      - name: Archive Executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux_executables
+          path: |
+            xi_connect
+            xi_map
+            xi_search
+            xi_world
+
+  Linux_ClangTidy18_64bit:
+    needs: Sanity_Checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common cmake libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev binutils-dev
+      - name: Cache 'build' folder
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-clang-tidy
+      - name: Configure CMake
+        run: |
+          export CC=/usr/bin/clang-18
+          export CXX=/usr/bin/clang++-18
+          mkdir -p build
+          cmake -S . -B build -DENABLE_CLANG_TIDY=ON
+      - name: Build
+        run: |
+          touch clang-tidy.txt
+          cmake --build build -j4 >> clang-tidy.txt || true
+          cat clang-tidy.txt
+          if grep -q warning\|error clang-tidy.txt; then
+              exit 1
+          fi
+
+  Linux_GCC14_64bit:
     needs: Sanity_Checks
     runs-on: ubuntu-24.04
     steps:
@@ -253,19 +320,10 @@ jobs:
       - name: Build
         run: |
           cmake --build build -j4
-      - name: Archive Executables
-        uses: actions/upload-artifact@v4
-        with:
-          name: executables
-          path: |
-            xi_connect
-            xi_map
-            xi_search
-            xi_world
 
-  Full_Startup_Checks:
+  Full_Startup_Checks_Linux:
     runs-on: ubuntu-24.04
-    needs: GCC14_64bit
+    needs: Linux_Clang18_64bit
     services:
       mysql:
         image: mariadb:10.6
@@ -282,7 +340,7 @@ jobs:
           submodules: recursive # For navmeshes
       - uses: actions/download-artifact@v4
         with:
-          name: executables
+          name: linux_executables
           path: .
       - name: Install Dependencies
         # TODO: Properly use python venv
@@ -427,9 +485,9 @@ jobs:
               exit -1
           fi
 
-  MultiInstance_Startup_Checks:
+  MultiInstance_Startup_Checks_Linux:
     runs-on: ubuntu-24.04
-    needs: GCC14_64bit
+    needs: Linux_Clang18_64bit
     services:
       mysql:
         image: mariadb:10.6
@@ -445,7 +503,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/download-artifact@v4
         with:
-          name: executables
+          name: linux_executables
           path: .
       - name: Install Dependencies
         # TODO: Properly use python venv
