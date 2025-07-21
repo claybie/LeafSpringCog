@@ -35392,7 +35392,7 @@ INSERT INTO `mob_spawn_points` VALUES (17203663,'Halforc_Ranger','Halforc Ranger
 INSERT INTO `mob_spawn_points` VALUES (17203664,'Halforc_Dragoon','Halforc Dragoon',61,0.000,0.000,0.000,0);
 INSERT INTO `mob_spawn_points` VALUES (17203665,'Orcs_Wyvern','Orc\'s Wyvern',62,0.000,0.000,0.000,0);
 INSERT INTO `mob_spawn_points` VALUES (17203666,'Giollemitte_B_Feroun','Giollemitte B Feroun',63,-308.447,-0.354,405.531,197);
-INSERT INTO `mob_spawn_points` VALUES (17203667,'Skeleton_Esquire','Skeleton Esquire',64,-310.132,-0.337,404.861,218);
+INSERT INTO `mob_spawn_points` VALUES (17203667,'Skeleton_Esquire_NM','Skeleton Esquire',64,-317.101,0.000,399.182,217);
 
 -- Garrison
 INSERT INTO `mob_spawn_points` VALUES (17203668,'Orcish_Fighter','Orcish Fighter',65,67.926,0.422,8.893,160);
