@@ -1860,7 +1860,9 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             CPetEntity* PPetEntity = dynamic_cast<CPetEntity*>(PPet);
             CPetSkill*  PPetSkill  = battleutils::GetPetSkill(PAbility->getID());
 
-            if (PPetEntity && PPetEntity->getPetType() != PET_TYPE::JUG_PET && PPetSkill) // is a real pet (not charmed or a jugpet which is mob-like) and has pet ability - don't display msg and notify pet
+            // is a real pet (charmed pets won't return a valid PPetEntity)
+            // and has pet ability in the pet_skills sql table
+            if (PPetEntity && PPetSkill) // don't display msg and notify pet
             {
                 actionList_t& actionList     = action.getNewActionList();
                 actionList.ActionTargetID    = PTarget->id;
@@ -1872,6 +1874,19 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
                 actionTarget.messageID       = 0;
 
                 auto PPetTarget = PTarget->targid;
+
+                // set primary target for jug ready abilities (JA targets the player, but the pet acts like a mob and makes its own decision on the skill target)
+                if (PPetEntity->getPetType() == PET_TYPE::JUG_PET)
+                {
+                    if (PPetSkill->getValidTargets() & TARGET_ENEMY)
+                    {
+                        PPetTarget = PPetEntity->GetBattleTargetID();
+                    }
+                    else
+                    {
+                        PPetTarget = PPetEntity->targid;
+                    }
+                }
 
                 PPetEntity->PAI->PetSkill(PPetTarget, PPetSkill->getID());
             }
