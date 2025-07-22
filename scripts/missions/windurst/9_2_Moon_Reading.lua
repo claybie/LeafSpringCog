@@ -105,6 +105,7 @@ mission.sections =
                         player:getMissionStatus(mission.areaId) == 2 and
                         player:getLocalVar('battlefieldWin') == xi.battlefield.id.MOON_READING
                     then
+                        player:addSpell(xi.magic.spell.AJIDO_MARUJIDO)
                         player:setMissionStatus(mission.areaId, 3)
                     end
                 end,
