@@ -189,9 +189,15 @@ CLuaBaseEntity::CLuaBaseEntity(CBaseEntity* PEntity)
  *  Notes   : Mainly used for showing retail text specific to an NPC
  ************************************************************************/
 
-void CLuaBaseEntity::showText(CLuaBaseEntity* mob, uint16 messageID, sol::object const& p0, sol::object const& p1, sol::object const& p2, sol::object const& p3)
+void CLuaBaseEntity::showText(CLuaBaseEntity* entity, uint16 messageID, sol::object const& p0, sol::object const& p1, sol::object const& p2, sol::object const& p3)
 {
-    CBaseEntity* PBaseEntity = mob->GetBaseEntity();
+    CBaseEntity* PBaseEntity = entity->GetBaseEntity();
+
+    if (PBaseEntity == nullptr)
+    {
+        ShowError("Invalid entity used on showText() function. Message ID (%i)", messageID);
+        return;
+    }
 
     if (PBaseEntity->objtype == TYPE_NPC)
     {
