@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,25 +19,17 @@
 ===========================================================================
 */
 
-#ifndef _CDELIVERYBOXPACKET_H
-#define _CDELIVERYBOXPACKET_H
+#include "0x112_battlefield_req.h"
 
-#include "common/cbasetypes.h"
+#include "entities/charentity.h"
 
-#include "basic.h"
-
-#define AH_SANDORIA "AH-SandOria"
-#define AH_JEUNO    "AH-Jeuno"
-#define AH_WINDURST "AH-Windurst"
-#define AH_BASTOK   "AH-Bastok"
-
-enum class GP_CLI_COMMAND_PBX_BOXNO : int8_t;
-enum class GP_CLI_COMMAND_PBX_COMMAND : uint8_t;
-class CDeliveryBoxPacket : public CBasicPacket
+auto GP_CLI_COMMAND_BATTLEFIELD_REQ::validate(MapSession* PSession, const CCharEntity* PChar) const -> PacketValidationResult
 {
-public:
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, uint8 count, uint8 param);
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, CItem* PItem, uint8 slotid, uint8 count, uint8 message);
-};
+    return PacketValidator()
+        .oneOf<GP_CLI_COMMAND_BATTLEFIELD_REQ_KIND>(Kind);
+}
 
-#endif
+void GP_CLI_COMMAND_BATTLEFIELD_REQ::process(MapSession* PSession, CCharEntity* PChar) const
+{
+    ShowDebugFmt("GP_CLI_COMMAND_BATTLEFIELD_REQ: Not implemented. Kind: {}", Kind);
+}

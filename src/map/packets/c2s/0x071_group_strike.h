@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,25 +19,24 @@
 ===========================================================================
 */
 
-#ifndef _CDELIVERYBOXPACKET_H
-#define _CDELIVERYBOXPACKET_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-#include "basic.h"
-
-#define AH_SANDORIA "AH-SandOria"
-#define AH_JEUNO    "AH-Jeuno"
-#define AH_WINDURST "AH-Windurst"
-#define AH_BASTOK   "AH-Bastok"
-
-enum class GP_CLI_COMMAND_PBX_BOXNO : int8_t;
-enum class GP_CLI_COMMAND_PBX_COMMAND : uint8_t;
-class CDeliveryBoxPacket : public CBasicPacket
+enum class GP_CLI_COMMAND_GROUP_STRIKE_KIND : uint8_t
 {
-public:
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, uint8 count, uint8 param);
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, CItem* PItem, uint8 slotid, uint8 count, uint8 message);
+    Party      = 0,
+    Linkshell1 = 1,
+    Linkshell2 = 2,
+    Alliance   = 5,
 };
 
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x0071
+// This packet is sent by the client when kicking a member from a party, alliance or linkshell.
+GP_CLI_PACKET(GP_CLI_COMMAND_GROUP_STRIKE,
+              uint32_t UniqueNo;  // PS2: UniqueNo
+              uint16_t ActIndex;  // PS2: ActIndex
+              uint8_t  Kind;      // PS2: Kind
+              uint8_t  padding00; // PS2: dammy2
+              uint8_t  sName[15]; // PS2: sName
+);

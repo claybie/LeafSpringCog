@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,25 +19,19 @@
 ===========================================================================
 */
 
-#ifndef _CDELIVERYBOXPACKET_H
-#define _CDELIVERYBOXPACKET_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-#include "basic.h"
-
-#define AH_SANDORIA "AH-SandOria"
-#define AH_JEUNO    "AH-Jeuno"
-#define AH_WINDURST "AH-Windurst"
-#define AH_BASTOK   "AH-Bastok"
-
-enum class GP_CLI_COMMAND_PBX_BOXNO : int8_t;
-enum class GP_CLI_COMMAND_PBX_COMMAND : uint8_t;
-class CDeliveryBoxPacket : public CBasicPacket
-{
-public:
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, uint8 count, uint8 param);
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, CItem* PItem, uint8 slotid, uint8 count, uint8 message);
-};
-
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x004B
+// This packet is sent by the client to request information from the server that is expected to span over multiple packets.
+GP_CLI_PACKET(GP_CLI_COMMAND_FRAGMENTS,
+              uint8_t Command;    // PS2: Command
+              int8_t  Result;     // PS2: Result
+              uint8_t value1;     // PS2: fragmentsNo
+              uint8_t value2;     // PS2: fragmentsTotal
+              int32_t timestamp;  // PS2: signature
+              int32_t size_total; // PS2: timestamp
+              int32_t offset;     // PS2: offset
+              int32_t data_size;  // PS2: size
+);

@@ -1,7 +1,7 @@
-﻿/*
+/*
 ===========================================================================
 
-  Copyright (c) 2010-2015 Darkstar Dev Teams
+  Copyright (c) 2025 LandSandBoat Dev Teams
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,25 +19,20 @@
 ===========================================================================
 */
 
-#ifndef _CDELIVERYBOXPACKET_H
-#define _CDELIVERYBOXPACKET_H
+#pragma once
 
-#include "common/cbasetypes.h"
+#include "base.h"
 
-#include "basic.h"
-
-#define AH_SANDORIA "AH-SandOria"
-#define AH_JEUNO    "AH-Jeuno"
-#define AH_WINDURST "AH-Windurst"
-#define AH_BASTOK   "AH-Bastok"
-
-enum class GP_CLI_COMMAND_PBX_BOXNO : int8_t;
-enum class GP_CLI_COMMAND_PBX_COMMAND : uint8_t;
-class CDeliveryBoxPacket : public CBasicPacket
+enum class GP_CLI_COMMAND_BATTLEFIELD_REQ_KIND : uint8_t
 {
-public:
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, uint8 count, uint8 param);
-    CDeliveryBoxPacket(GP_CLI_COMMAND_PBX_COMMAND action, GP_CLI_COMMAND_PBX_BOXNO boxid, CItem* PItem, uint8 slotid, uint8 count, uint8 message);
+    Both       = 0, // The client is requesting both sidebar and map overlay information.
+    Sidebar    = 1, // The client is requesting sidebar information
+    MapOverlay = 2, // The client is requesting map overlay information.
 };
 
-#endif
+// https://github.com/atom0s/XiPackets/tree/main/world/client/0x0112
+// This packet is sent by the client when requesting extra data about certain battlefield content.
+GP_CLI_PACKET(GP_CLI_COMMAND_BATTLEFIELD_REQ,
+              uint8_t Kind;      // The packet kind.
+              uint8_t padding00; // Padding; unused.
+);
