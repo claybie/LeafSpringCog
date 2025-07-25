@@ -36,6 +36,7 @@
 
 #include "ability.h"
 #include "alliance.h"
+#include "aman.h"
 #include "battlefield.h"
 #include "daily_system.h"
 #include "enmity_container.h"
@@ -416,12 +417,23 @@ void CLuaBaseEntity::printToArea(std::string const& message, sol::object const& 
 
         PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE_SELF, std::make_unique<CChatMessagePacket>(PChar, messageLook, message, name));
     }
+    else if (messageRange == ChatMessageArea::Assist)
+    {
+        message::send(ipc::ChatMessageAssist{
+            .senderId    = PChar->id,
+            .senderName  = name,
+            .message     = message,
+            .mentorRank  = PChar->aman().isMentor() ? PChar->aman().getMentorRank() : static_cast<uint8>(0),
+            .masteryRank = PChar->aman().getMasteryRank(),
+            .messageType = messageLook,
+        });
+
+        PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE_SELF, std::make_unique<CChatMessagePacket>(PChar, messageLook, message, name));
+    }
     else
     {
         ShowError("CLuaBaseEntity::printToArea : invalid message area/messageRange value %u given by script.", messageRange);
     }
-
-    // TODO: Assist channels
 }
 
 /************************************************************************
@@ -6027,7 +6039,7 @@ void CLuaBaseEntity::setNewPlayer(bool newplayer)
  *  Notes   : Test me!  Changing retval to bool
  ************************************************************************/
 
-bool CLuaBaseEntity::getMentor()
+auto CLuaBaseEntity::getMentor() const -> bool
 {
     if (m_PBaseEntity->objtype != TYPE_PC)
     {
@@ -6036,7 +6048,7 @@ bool CLuaBaseEntity::getMentor()
     }
 
     CCharEntity* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
-    return PChar->m_mentorUnlocked ? true : false;
+    return PChar->aman().hasMentorUnlocked();
 }
 
 /************************************************************************
@@ -6045,7 +6057,7 @@ bool CLuaBaseEntity::getMentor()
  *  Example : player:setMentor(true)
  ************************************************************************/
 
-void CLuaBaseEntity::setMentor(bool mentor)
+void CLuaBaseEntity::setMentor(bool mentor) const
 {
     if (m_PBaseEntity->objtype != TYPE_PC)
     {
@@ -6053,10 +6065,9 @@ void CLuaBaseEntity::setMentor(bool mentor)
         return;
     }
 
-    CCharEntity* PChar      = static_cast<CCharEntity*>(m_PBaseEntity);
-    PChar->m_mentorUnlocked = mentor;
+    CCharEntity* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
+    PChar->aman().setMentorUnlocked(mentor);
 
-    charutils::SaveMentorFlag(PChar);
     PChar->updatemask |= UPDATE_HP;
 }
 

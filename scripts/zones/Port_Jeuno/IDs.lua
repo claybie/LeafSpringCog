@@ -7,6 +7,7 @@ zones[xi.zone.PORT_JEUNO] =
 {
     text =
     {
+        ASSIST_CHANNEL                = 6380, -- You will be able to use the Assist Channel until #/#/# at #:# (JST).
         ITEM_CANNOT_BE_OBTAINED       = 6385, -- You cannot obtain the <item>. Come back after sorting your inventory.
         MYSTIC_RETRIEVER              = 6388, -- You cannot obtain the <item>. Speak with the mystic retriever after sorting your inventory.
         ITEM_OBTAINED                 = 6391, -- Obtained: <item>.

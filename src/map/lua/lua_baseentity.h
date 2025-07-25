@@ -324,8 +324,8 @@ public:
     bool isSeekingParty();
     bool getNewPlayer();
     void setNewPlayer(bool newplayer);
-    bool getMentor();
-    void setMentor(bool mentor);
+    auto getMentor() const -> bool;
+    void setMentor(bool mentor) const;
 
     uint8 getGMLevel();
     void  setGMLevel(uint8 level);

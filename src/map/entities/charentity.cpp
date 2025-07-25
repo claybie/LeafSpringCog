@@ -39,7 +39,6 @@
 #include "packets/inventory_finish.h"
 #include "packets/key_items.h"
 #include "packets/lock_on.h"
-#include "packets/menu_raisetractor.h"
 #include "packets/message_special.h"
 #include "packets/message_standard.h"
 #include "packets/message_system.h"
@@ -51,15 +50,13 @@
 #include "ai/helpers/targetfind.h"
 #include "ai/states/ability_state.h"
 #include "ai/states/attack_state.h"
-#include "ai/states/death_state.h"
-#include "ai/states/inactive_state.h"
 #include "ai/states/item_state.h"
 #include "ai/states/magic_state.h"
-#include "ai/states/raise_state.h"
 #include "ai/states/range_state.h"
 #include "ai/states/weaponskill_state.h"
 
 #include "ability.h"
+#include "aman.h"
 #include "attack.h"
 #include "automatonentity.h"
 #include "battlefield.h"
@@ -99,6 +96,7 @@
 
 CCharEntity::CCharEntity()
 : m_PlayTime(0s)
+, m_AMAN(this)
 {
     TracyZoneScoped;
     objtype     = TYPE_PC;
@@ -260,7 +258,6 @@ CCharEntity::CCharEntity()
     m_ActionOffsetPos  = {};
     m_previousLocation = {};
 
-    m_mentorUnlocked   = false;
     m_jobMasterDisplay = false;
     m_EffectsChanged   = false;
 
@@ -544,11 +541,6 @@ bool CCharEntity::isAway() const
     return playerConfig.AwayFlg;
 }
 
-bool CCharEntity::isMentor() const
-{
-    return playerConfig.MentorFlg;
-}
-
 bool CCharEntity::hasAutoTargetEnabled() const
 {
     return !playerConfig.AutoTargetOffFlg;
@@ -769,6 +761,16 @@ auto CCharEntity::getStorage(const uint8 locationId) const -> CItemContainer*
 
     ShowWarning("Unhandled or Invalid Location ID (%d) passed to function.", locationId);
     return nullptr;
+}
+
+auto CCharEntity::aman() -> CAMANContainer&
+{
+    if (!m_AMAN.isInitialized())
+    {
+        m_AMAN.init();
+    }
+
+    return m_AMAN;
 }
 
 int8 CCharEntity::getShieldSize()
