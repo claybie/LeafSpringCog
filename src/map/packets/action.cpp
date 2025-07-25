@@ -250,12 +250,12 @@ CActionPacket::CActionPacket(action_t& action)
         {
             packBitsBE(buffer_.data(), action.actionid, 86, 10);
             // either this way or enumerate all recast timers and compare the spell id.
-            packBitsBE(buffer_.data(), timer::count_seconds(action.recast), 118, 10);
+            packBitsBE(buffer_.data(), timer::count_seconds(std::chrono::ceil<std::chrono::seconds>(action.recast)), 118, 10);
         }
         break;
         case ACTION_MAGIC_INTERRUPT:
         {
-            packBitsBE(buffer_.data(), timer::count_seconds(action.recast), 118, 16);
+            packBitsBE(buffer_.data(), timer::count_seconds(std::chrono::ceil<std::chrono::seconds>(action.recast)), 118, 16);
 
             // FourCC command "sp" - interrupt
             packBitsBE(buffer_.data(), 0x7073, 86, 16);
