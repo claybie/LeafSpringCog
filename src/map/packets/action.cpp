@@ -91,7 +91,7 @@ CActionPacket::CActionPacket(action_t& action)
         case ACTION_JOBABILITY_FINISH:
         {
             packBitsBE(buffer_.data(), action.actionid, 86, 10);
-            packBitsBE(buffer_.data(), timer::count_seconds(action.recast), 118, 10);
+            packBitsBE(buffer_.data(), timer::count_seconds(std::chrono::ceil<std::chrono::seconds>(action.recast)), 118, 10);
         }
         break;
         case ACTION_RUN_WARD_EFFUSION:
