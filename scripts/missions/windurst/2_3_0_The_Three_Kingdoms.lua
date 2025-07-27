@@ -241,6 +241,7 @@ mission.sections =
                 end,
 
                 [582] = function(player, csid, option, npc)
+                    player:addSpell(xi.magic.spell.LION)
                     player:setMissionStatus(mission.areaId, 2)
                 end,
             },

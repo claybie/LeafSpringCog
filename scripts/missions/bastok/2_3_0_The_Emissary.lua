@@ -196,6 +196,7 @@ mission.sections =
                 [581] = function(player, csid, option, npc)
                     player:delMission(mission.areaId, mission.missionId)
                     player:addMission(xi.mission.log_id.BASTOK, xi.mission.id.bastok.THE_EMISSARY_SANDORIA)
+                    player:addSpell(xi.magic.spell.LION)
                     player:setMissionStatus(mission.areaId, 2)
                 end,
             },
