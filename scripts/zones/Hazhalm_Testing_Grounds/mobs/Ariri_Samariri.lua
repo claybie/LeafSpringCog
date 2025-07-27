@@ -13,6 +13,7 @@
 mixins =
 {
     require('scripts/mixins/draw_in'),
+    require('scripts/mixins/families/poroggo'),
 }
 -----------------------------------
 ---@type TMobEntity
