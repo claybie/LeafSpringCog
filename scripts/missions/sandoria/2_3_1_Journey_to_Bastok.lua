@@ -82,14 +82,14 @@ mission.sections =
                         mission:setVar(player, 'Option', 1)
                     else
                         player:setMissionStatus(mission.areaId, 5)
-			player:addSpell(xi.magic.spell.LION)
+                        player:addSpell(xi.magic.spell.LION)
                     end
                 end,
 
                 [425] = function(player, csid, option, npc)
                     if npcUtil.giveItem(player, { { xi.item.PICKAXE, 3 } }) then
                         player:setMissionStatus(mission.areaId, 5)
-			player:addSpell(xi.magic.spell.LION)
+                        player:addSpell(xi.magic.spell.LION)
                         mission:setVar(player, 'Option', 0)
                     end
                 end,

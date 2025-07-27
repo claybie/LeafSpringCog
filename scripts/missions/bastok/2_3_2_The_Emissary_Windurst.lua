@@ -105,6 +105,7 @@ mission.sections =
             onEventFinish =
             {
                 [42] = function(player, csid, option, npc)
+                    player:addSpell(xi.magic.spell.LION)
                     player:setMissionStatus(mission.areaId, 3)
                 end,
 
