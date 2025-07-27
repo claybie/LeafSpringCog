@@ -1612,23 +1612,27 @@ void CCharEntity::OnWeaponSkillFinished(CWeaponSkillState& state, action_t& acti
 
                             actionTarget.additionalEffect = effect;
 
-                            // Despite appearances, ws_points_skillchain is not a multiplier it is just an amount "per element"
-                            auto wsPointsSkillchain = settings::get<uint8>("map.WS_POINTS_SKILLCHAIN");
+                            // Despite appearances, ws_points_skillchain is not a multiplier it is just an amount "per skillchain level"
+                            const auto wsPointsSkillchain = settings::get<uint8>("map.WS_POINTS_SKILLCHAIN");
                             if (effect >= 7 && effect < 15)
                             {
-                                wspoints += (1 * wsPointsSkillchain); // 1 element
+                                wspoints += (1 * wsPointsSkillchain); // Level 1
                             }
                             else if (effect >= 3)
                             {
-                                wspoints += (2 * wsPointsSkillchain); // 2 elements
+                                wspoints += (2 * wsPointsSkillchain); // Level 2
                             }
                             else
                             {
-                                wspoints += (4 * wsPointsSkillchain); // 4 elements
+                                wspoints += (3 * wsPointsSkillchain); // Level 3
                             }
                         }
                     }
                     // check for ws points
+                    // TODO: As a general rule, mobs not granting EXP do not give WSP
+                    // The following exceptions apply:
+                    // - PC targeted weaponskills always give WSP
+                    // - A handful of content: Besieged, DI
                     if (charutils::CheckMob(this->GetMLevel(), PTarget->GetMLevel()) > EMobDifficulty::TooWeak)
                     {
                         charutils::AddWeaponSkillPoints(this, damslot, wspoints);
