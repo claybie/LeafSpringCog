@@ -26,6 +26,7 @@ entity.onEventFinish = function(player, csid, option, npc)
     if csid == 56 then
         player:setCharVar('TheHolyCrest_Event', 5)
         player:confirmTrade()
+        player:addSpell(xi.magic.spell.RAHAL)
         player:startEvent(33)
     end
 end
