@@ -51,6 +51,7 @@
 #include "map_server.h"
 #include "mob_modifier.h"
 #include "mob_spell_container.h"
+#include "mob_spell_list.h"
 #include "mobskill.h"
 #include "notoriety_container.h"
 #include "recast_container.h"
@@ -17392,20 +17393,40 @@ void CLuaBaseEntity::setDamage(uint16 damage)
 }
 
 /************************************************************************
+ *  Function: getSpellListId()
+ *  Purpose : Returns ID of the spell list a Mob is using
+ *  Example : local spellListId = mob:getSpellListId()
+ ************************************************************************/
+
+auto CLuaBaseEntity::getSpellListId() const -> uint16
+{
+    if (const auto* PMob = dynamic_cast<CMobEntity*>(m_PBaseEntity))
+    {
+        if (PMob->m_SpellListContainer)
+        {
+            return PMob->m_SpellListContainer->getId();
+        }
+    }
+
+    ShowError("function call on invalid entity! (name: %s type: %d)", m_PBaseEntity->name, m_PBaseEntity->objtype);
+    return 0;
+}
+
+/************************************************************************
  *  Function: hasSpellList()
  *  Purpose : Returns true if a Mob has spells to cast
  *  Example : if mob:hasSpellList() then
  ************************************************************************/
 
-bool CLuaBaseEntity::hasSpellList()
+auto CLuaBaseEntity::hasSpellList() const -> bool
 {
-    if (m_PBaseEntity->objtype & TYPE_NPC || m_PBaseEntity->objtype & TYPE_PC)
+    if (const auto* PMob = dynamic_cast<CMobEntity*>(m_PBaseEntity))
     {
-        ShowError("function call on invalid entity! (name: %s type: %d)", m_PBaseEntity->name, m_PBaseEntity->objtype);
-        return false;
+        return PMob->SpellContainer->HasSpells();
     }
 
-    return static_cast<CMobEntity*>(m_PBaseEntity)->SpellContainer->HasSpells();
+    ShowError("function call on invalid entity! (name: %s type: %d)", m_PBaseEntity->name, m_PBaseEntity->objtype);
+    return false;
 }
 
 /************************************************************************
@@ -17415,15 +17436,15 @@ bool CLuaBaseEntity::hasSpellList()
  *  Notes   :
  ************************************************************************/
 
-void CLuaBaseEntity::setSpellList(uint16 spellList)
+void CLuaBaseEntity::setSpellList(const uint16 spellListId) const
 {
-    if (m_PBaseEntity->objtype & TYPE_NPC || m_PBaseEntity->objtype & TYPE_PC)
+    if (auto* PMob = dynamic_cast<CMobEntity*>(m_PBaseEntity))
     {
-        ShowError("function call on invalid entity! (name: %s type: %d)", m_PBaseEntity->name, m_PBaseEntity->objtype);
+        mobutils::SetSpellList(PMob, spellListId);
         return;
     }
 
-    mobutils::SetSpellList(static_cast<CMobEntity*>(m_PBaseEntity), spellList);
+    ShowError("function call on invalid entity! (name: %s type: %d)", m_PBaseEntity->name, m_PBaseEntity->objtype);
 }
 
 /************************************************************************
@@ -19895,6 +19916,7 @@ void CLuaBaseEntity::Register()
 
     SOL_REGISTER("setDelay", CLuaBaseEntity::setDelay);
     SOL_REGISTER("setDamage", CLuaBaseEntity::setDamage);
+    SOL_REGISTER("getSpellListId", CLuaBaseEntity::getSpellListId);
     SOL_REGISTER("hasSpellList", CLuaBaseEntity::hasSpellList);
     SOL_REGISTER("setSpellList", CLuaBaseEntity::setSpellList);
     SOL_REGISTER("setAutoAttackEnabled", CLuaBaseEntity::setAutoAttackEnabled);
