@@ -588,15 +588,15 @@ public:
     uint16 copyConfrontationEffect(uint16 targetID); // copy confrontation effect, param = targetEntity:getTargID()
 
     // Battlefields
-    auto  getBattlefield() -> CBattlefield*;                                                                                       // returns CBattlefield* or nullptr if not available
-    int32 getBattlefieldID();                                                                                                      // returns entity->PBattlefield->GetID() or -1 if not available
-    uint8 registerBattlefield(sol::object const& arg0, sol::object const& arg1, sol::object const& arg2, sol::object const& arg3); // attempt to register a battlefield, returns BATTLEFIELD_RETURNCODE
-    bool  battlefieldAtCapacity(int battlefieldID);                                                                                // returns 1 if this battlefield is full
-    bool  enterBattlefield(sol::object const& area);
-    bool  leaveBattlefield(uint8 leavecode);
-    bool  isInDynamis();
-    void  setEnteredBattlefield(bool entered);
-    bool  hasEnteredBattlefield();
+    auto getBattlefield() const -> CBattlefield*;                                                                                                // returns CBattlefield* or nullptr if not available
+    auto getBattlefieldID() const -> int32;                                                                                                      // returns entity->PBattlefield->GetID() or -1 if not available
+    auto registerBattlefield(sol::object const& arg0, sol::object const& arg1, sol::object const& arg2, sol::object const& arg3) const -> uint8; // attempt to register a battlefield, returns BATTLEFIELD_RETURNCODE
+    auto battlefieldAtCapacity(int battlefieldID) const -> bool;                                                                                 // returns 1 if this battlefield is full
+    auto enterBattlefield(sol::object const& area) const -> bool;
+    auto leaveBattlefield(uint8 leavecode) const -> bool;
+    auto isInDynamis() const -> bool;
+    void setEnteredBattlefield(bool entered) const;
+    auto hasEnteredBattlefield() const -> bool;
 
     // Battle Utilities
     bool isAlive();
