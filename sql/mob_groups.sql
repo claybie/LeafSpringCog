@@ -11481,7 +11481,7 @@ INSERT INTO `mob_groups` VALUES (20,233,167,'Arioch',0,32,2388,0,0,56,62,0);
 INSERT INTO `mob_groups` VALUES (21,6393,167,'Bloodsucker',300,0,174,0,0,65,68,0);
 INSERT INTO `mob_groups` VALUES (22,1505,167,'Gespenst',300,0,950,0,0,68,70,0);
 INSERT INTO `mob_groups` VALUES (23,2548,167,'Manes',0,32,2879,0,0,72,73,0);
-INSERT INTO `mob_groups` VALUES (24,5138,167,'Bloodsucker_NM',0,128,2892,3600,0,71,73,0);
+INSERT INTO `mob_groups` VALUES (24,5138,167,'Bloodsucker_NM',3600,0,2892,3600,0,71,73,0);
 INSERT INTO `mob_groups` VALUES (25,482,167,'Bodach',0,128,0,7500,0,80,80,0);
 INSERT INTO `mob_groups` VALUES (26,6723,167,'Garbage_Gel',0,128,0,0,0,122,122,0);
 
