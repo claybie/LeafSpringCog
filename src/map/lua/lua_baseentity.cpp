@@ -2543,11 +2543,6 @@ bool CLuaBaseEntity::sendGuild(uint16 guildID, uint8 open, uint8 close, uint8 ho
     PChar->PGuildShop = PGuildShop;
     PChar->pushPacket<CGuildMenuPacket>(status, open, close, holiday);
 
-    if (status == GUILD_OPEN)
-    {
-        PChar->pushPacket<CGuildMenuBuyPacket>(PChar, PGuildShop);
-    }
-
     return status == GUILD_OPEN;
 }
 
