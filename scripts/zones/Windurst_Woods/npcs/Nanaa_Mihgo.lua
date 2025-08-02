@@ -143,6 +143,7 @@ entity.onEventFinish = function(player, csid, option, npc)
         player:completeQuest(xi.questLog.WINDURST, xi.quest.id.windurst.MIHGOS_AMIGO)
         player:addTitle(xi.title.CAT_BURGLAR_GROUPIE)
         player:addGil(xi.settings.main.GIL_RATE * 200)
+        player:addSpell(xi.magic.spell.NANAA_MIHGO)
         player:addFame(xi.fameArea.NORG, 60)
         player:needToZone(true)
     elseif csid == 494 then
