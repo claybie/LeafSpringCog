@@ -13,9 +13,9 @@ xi.settings.network =
 {
     SQL_HOST     = "127.0.0.1",
     SQL_PORT     = 3306,
-    SQL_LOGIN    = "schattenhase",
-    SQL_PASSWORD = "silverfox-aquabox-gingerspice-maltesefalcon",
-    SQL_DATABASE = "rheinlandpfalz",
+    SQL_LOGIN    = "",
+    SQL_PASSWORD = "",
+    SQL_DATABASE = "",
 
     LOGIN_DATA_IP   = "0.0.0.0",
     LOGIN_DATA_PORT = 54230,
