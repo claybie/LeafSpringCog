@@ -33,11 +33,6 @@ auto GP_CLI_COMMAND_POS::validate(MapSession* PSession, const CCharEntity* PChar
 
 void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
 {
-    if (PChar->pendingPositionUpdate)
-    {
-        return;
-    }
-
     const float  newX        = x;
     const float  newY        = z; // Not a typo.
     const float  newZ        = y; // Not a typo.
@@ -62,7 +57,7 @@ void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
         PChar->loc.p.y = newY;
         PChar->loc.p.z = newZ;
 
-        PChar->loc.p.moving   = MoveFlame;
+        PChar->loc.p.moving   = MovTime;
         PChar->loc.p.rotation = newRotation;
 
         PChar->m_TargID = newTargID;
