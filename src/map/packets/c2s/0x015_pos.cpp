@@ -62,11 +62,7 @@ void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
         PChar->loc.p.y = newY;
         PChar->loc.p.z = newZ;
 
-<<<<<<< HEAD
-        PChar->loc.p.moving   = MovTime;
-=======
         PChar->loc.p.moving   = MoveFlame;
->>>>>>> 263b4c4b0f2e04980f9ff22e549b8fda52026675
         PChar->loc.p.rotation = newRotation;
 
         PChar->m_TargID = newTargID;
