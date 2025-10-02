@@ -35,15 +35,15 @@
 #include "packets/char_update.h"
 #include "packets/entity_update.h"
 #include "packets/event.h"
-#include "packets/event_string.h"
-#include "packets/inventory_finish.h"
 #include "packets/key_items.h"
-#include "packets/lock_on.h"
 #include "packets/message_special.h"
 #include "packets/message_standard.h"
 #include "packets/message_system.h"
 #include "packets/message_text.h"
-#include "packets/release.h"
+#include "packets/s2c/0x01d_item_same.h"
+#include "packets/s2c/0x033_eventstr.h"
+#include "packets/s2c/0x052_eventucoff.h"
+#include "packets/s2c/0x058_assist.h"
 
 #include "ai/ai_container.h"
 #include "ai/controllers/player_controller.h"
@@ -62,6 +62,8 @@
 #include "battlefield.h"
 #include "char_recast_container.h"
 #include "charentity.h"
+
+#include "blue_spell.h"
 #include "conquest_system.h"
 #include "enums/key_items.h"
 #include "ipc_client.h"
@@ -1066,13 +1068,13 @@ void CCharEntity::PostTick()
         // Note: Retail sends this in the same chunk as the inventory equip packets, but it doesnt seem to matter as long as it arrives
         for (const auto& [container, dirty] : dirtyInventoryContainers)
         {
-            pushPacket<CInventoryFinishPacket>(container);
+            pushPacket<GP_SERV_COMMAND_ITEM_SAME>(container);
         }
 
         dirtyInventoryContainers.clear();
 
         // Notify client containers are now ok
-        pushPacket<CInventoryFinishPacket>();
+        pushPacket<GP_SERV_COMMAND_ITEM_SAME>();
     }
 
     if (ReloadParty())
@@ -1209,7 +1211,7 @@ void CCharEntity::OnChangeTarget(CBattleEntity* PNewTarget)
 {
     TracyZoneScoped;
     battleutils::RelinquishClaim(this);
-    pushPacket<CLockOnPacket>(this, PNewTarget);
+    pushPacket<GP_SERV_COMMAND_ASSIST>(this, PNewTarget);
     PLatentEffectContainer->CheckLatentsTargetChange();
 }
 
@@ -1562,22 +1564,6 @@ void CCharEntity::OnWeaponSkillFinished(CWeaponSkillState& state, action_t& acti
 
             if (primary)
             {
-                if (isRangedWS)
-                {
-                    uint16 recycleChance = getMod(Mod::RECYCLE) + PMeritPoints->GetMeritValue(MERIT_RECYCLE, this) + this->PJobPoints->GetJobPointValue(JP_AMMO_CONSUMPTION);
-
-                    if (StatusEffectContainer->HasStatusEffect(EFFECT_UNLIMITED_SHOT))
-                    {
-                        StatusEffectContainer->DelStatusEffect(EFFECT_UNLIMITED_SHOT);
-                        recycleChance = 100;
-                    }
-
-                    if (xirand::GetRandomNumber(100) > recycleChance)
-                    {
-                        battleutils::RemoveAmmo(this);
-                    }
-                }
-
                 // See battleentity.h for REACTION class
                 // On retail, weaponskills will contain 0x08, 0x10 (HIT, ABILITY) on hit and may include the following:
                 // 0x01, 0x02, 0x04 (MISS, GUARDED, BLOCK)
@@ -1704,50 +1690,43 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
             return;
         }
 
-        // TODO: Remove me when all pet abilities are ported to PetSkill
-        if (PAbility->getID() >= ABILITY_HEALING_RUBY && PAbility->getID() <= ABILITY_PERFECT_DEFENSE && !battleutils::GetPetSkill(PAbility->getID()))
-        {
-            // Blood pact MP costs are stored under animation ID
-            float mpCost = PAbility->getAnimationID();
-            if (StatusEffectContainer->HasStatusEffect(EFFECT_APOGEE))
-            {
-                mpCost *= 1.5f;
-            }
-
-            if (this->health.mp < mpCost)
-            {
-                setActionInterrupted(action, PTarget, MSGBASIC_UNABLE_TO_USE_JA, 0);
-                return;
-            }
-        }
-
         if (battleutils::IsParalyzed(this))
         {
             setActionInterrupted(action, PTarget, MSGBASIC_IS_PARALYZED, 0);
             return;
         }
 
-        // get any available merit recast reduction
-        auto meritRecastReduction = 0s;
+        // get any available recast reduction
+        auto recastReduction = 0s;
 
         if (PAbility->getMeritModID() > 0 && !(PAbility->getAddType() & ADDTYPE_MERIT))
         {
-            meritRecastReduction = std::chrono::seconds(PMeritPoints->GetMeritValue((MERIT_TYPE)PAbility->getMeritModID(), this));
+            recastReduction = std::chrono::seconds(PMeritPoints->GetMeritValue((MERIT_TYPE)PAbility->getMeritModID(), this));
         }
 
         auto* charge = ability::GetCharge(this, PAbility->getRecastId());
         if (charge && PAbility->getID() != ABILITY_SIC)
         {
+            //  Can't assign merits via ability ID for Sic/Ready due to shenanigans
+            if (PAbility->getRecastId() == 102) // Sic/Ready recast ID
+            {
+                recastReduction = std::chrono::seconds(PMeritPoints->GetMeritValue(MERIT_SIC_RECAST, this));
+            }
+            else if (PAbility->getRecastId() == 231) // Stratagems recast ID
+            {
+                recastReduction += std::chrono::seconds(this->getMod(Mod::STRATAGEM_RECAST));
+            }
+
             // TODO: this is bad
             // "recast" 1-4 = sic/ready
             // "recast" 1 = quickdraw, stratagems
             auto crypticRecastSecondsAsType = timer::count_seconds(PAbility->getRecastTime());
 
-            action.recast = charge->chargeTime * crypticRecastSecondsAsType - meritRecastReduction;
+            action.recast = charge->chargeTime * crypticRecastSecondsAsType - recastReduction;
         }
         else
         {
-            action.recast = PAbility->getRecastTime() - meritRecastReduction;
+            action.recast = PAbility->getRecastTime() - recastReduction;
         }
 
         if (PAbility->getID() == ABILITY_LIGHT_ARTS || PAbility->getID() == ABILITY_DARK_ARTS || PAbility->getRecastId() == 231) // stratagems
@@ -1883,80 +1862,22 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
                     }
                 }
 
+                // OnAbilityCheck succeeded and petskill is found, tell pet to perform it
                 PPetEntity->PAI->PetSkill(PPetTarget, PPetSkill->getID());
             }
-            else if (PPet) // may be a bp, fallback - don't display msg and notify pet
+            // next two checks are to ensure misconfigurations don't consume cooldowns for unimplemented petskills
+            // properly-implemented skills will not get to this OnAbility function by nature of returning non-zero in OnAbilityCheck
+            else if (PPet)
             {
-                actionList_t& actionList     = action.getNewActionList();
-                actionList.ActionTargetID    = PTarget->id;
-                actionTarget_t& actionTarget = actionList.getNewActionTarget();
-                actionTarget.animation       = 94; // assault anim
-                actionTarget.reaction        = REACTION::NONE;
-                actionTarget.speceffect      = SPECEFFECT::RECOIL;
-                actionTarget.param           = 0;
-                actionTarget.messageID       = 0;
-
-                auto PPetTarget = PTarget->targid;
-                if (PAbility->getID() >= ABILITY_HEALING_RUBY && PAbility->getID() <= ABILITY_PERFECT_DEFENSE)
-                {
-                    // Blood Pact mp cost stored in animation ID
-                    float mpCost = PAbility->getAnimationID();
-
-                    if (StatusEffectContainer->HasStatusEffect(EFFECT_APOGEE))
-                    {
-                        mpCost *= 1.5f;
-                        StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_BLOODPACT);
-                        this->SetLocalVar("bpRecastTime", 0);
-                    }
-
-                    // Blood Boon (does not affect Astral Flow BPs)
-                    if ((PAbility->getAddType() & ADDTYPE_ASTRAL_FLOW) == 0)
-                    {
-                        int16 bloodBoonRate = getMod(Mod::BLOOD_BOON);
-                        if (xirand::GetRandomNumber(100) < bloodBoonRate)
-                        {
-                            mpCost *= xirand::GetRandomNumber(8.0f, 16.0f) / 16.0f;
-                        }
-                    }
-
-                    addMP((int32)-mpCost);
-                    if (this->GetLocalVar("bpRecastTime") > 0) // This will go away when all smn petskills are handled via jobutils/summoner.lua
-                    {
-                        action.recast = std::chrono::seconds(this->GetLocalVar("bpRecastTime"));
-                    }
-
-                    if (PAbility->getValidTarget() == TARGET_SELF)
-                    {
-                        PPetTarget = PPet->targid;
-                    }
-                }
-                else if (PAbility->getID() >= ABILITY_CONCENTRIC_PULSE && PAbility->getID() <= ABILITY_RADIAL_ARCANA)
-                {
-                    // use the animation id to get the pet version of this ability
-                    PAbility->setID(PAbility->getAnimationID());
-                    action.actionid = PAbility->getAnimationID();
-
-                    if (PAbility->getValidTarget() == TARGET_SELF)
-                    {
-                        PPetTarget = PPet->targid;
-                    }
-                }
-                else
-                {
-                    auto* PMobSkill = battleutils::GetMobSkill(PAbility->getMobSkillID());
-                    if (PMobSkill)
-                    {
-                        if (PMobSkill->getValidTargets() & TARGET_ENEMY)
-                        {
-                            PPetTarget = PPet->GetBattleTargetID();
-                        }
-                        else
-                        {
-                            PPetTarget = PPet->targid;
-                        }
-                    }
-                }
-                PPet->PAI->MobSkill(PPetTarget, PAbility->getMobSkillID());
+                // possible if a player triggers a pet skill that isn't implemented
+                setActionInterrupted(action, PTarget, MSGBASIC_UNABLE_TO_USE_JA, 0);
+                return;
+            }
+            else
+            {
+                // possible if a player triggers a pet skill that isn't implemented
+                setActionInterrupted(action, PTarget, MSGBASIC_REQUIRES_A_PET, 0);
+                return;
             }
         }
         // TODO: make this generic enough to not require an if
@@ -3320,7 +3241,7 @@ void CCharEntity::tryStartNextEvent()
     }
     else
     {
-        pushPacket<CEventStringPacket>(this, currentEvent);
+        pushPacket<GP_SERV_COMMAND_EVENTSTR>(this, currentEvent);
     }
 }
 
@@ -3330,7 +3251,7 @@ void CCharEntity::skipEvent()
     if (!m_Locked && !isInEvent() && (!currentEvent->cutsceneOptions.empty() || currentEvent->interruptText != 0))
     {
         pushPacket<CMessageSystemPacket>(0, 0, MsgStd::EventSkipped);
-        pushPacket<CReleasePacket>(this, RELEASE_TYPE::SKIPPING);
+        pushPacket<GP_SERV_COMMAND_EVENTUCOFF>(this, GP_SERV_COMMAND_EVENTUCOFF_MODE::CancelEvent);
         m_Substate = CHAR_SUBSTATE::SUBSTATE_NONE;
 
         if (currentEvent->interruptText != 0)

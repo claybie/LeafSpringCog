@@ -29,6 +29,7 @@
 #include "utils/battleutils.h"
 #include "utils/charutils.h"
 
+enum class MusicSlot : uint16_t;
 enum class ChocoboColor : uint8_t;
 class CBaseEntity;
 class CCharEntity;
@@ -42,6 +43,7 @@ class CLuaZone;
 
 class CLuaBaseEntity
 {
+protected:
     CBaseEntity* m_PBaseEntity;
 
 public:
@@ -55,7 +57,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const CLuaBaseEntity& entity);
 
     // Messaging System
-    void showText(CLuaBaseEntity* mob, uint16 messageID, sol::object const& p0, sol::object const& p1, sol::object const& p2, sol::object const& p3);
+    void showText(CLuaBaseEntity* entity, uint16 messageID, sol::object const& p0, sol::object const& p1, sol::object const& p2, sol::object const& p3, sol::object const& p4, sol::object const& p5);
     void messageText(CLuaBaseEntity* PLuaBaseEntity, uint16 messageID, sol::object const& arg2, sol::object const& arg3);
     void printToPlayer(std::string const& message, sol::object const& messageTypeObj, sol::object const& nameObj);
     void printToArea(std::string const& message, sol::object const& arg1, sol::object const& arg2, sol::object const& arg3, sol::object const& arg4);
@@ -88,7 +90,7 @@ public:
     // Packets, Events, and Flags
     void injectPacket(std::string const& filename); // Send the character a packet kept in a file
     void injectActionPacket(uint32 inTargetID, uint16 inCategory, uint16 inAnimationID, uint16 inSpecEffect, uint16 inReaction, uint16 inMessage, uint16 inActionParam, uint16 inParam);
-    void entityVisualPacket(std::string const& command, sol::object const& entity);
+    void entityVisualPacket(std::string const& command, sol::object const& entity) const;
     void entityAnimationPacket(const char* command, sol::object const& target);
     void sendDebugPacket(sol::table const& packetData);
 
@@ -164,24 +166,26 @@ public:
     void hideNPC(sol::object const& seconds);
     void updateNPCHideTime(sol::object const& seconds); // Updates the length of time a NPC remains hidden, if shorter than the original hide time.
 
-    uint8 getWeather(sol::object const& ignoreScholar);
-    void  setWeather(uint8 weatherType); // Set Weather condition (GM COMMAND)
+    auto getWeather(sol::object const& ignoreScholar) const -> uint8;
+    void setWeather(Weather weatherType); // Set Weather condition (GM COMMAND)
 
     // PC Instructions
-    void changeMusic(uint16 blockID, uint16 musicTrackID);                  // Sets the specified music Track for specified music block.
+    void changeMusic(MusicSlot slotId, uint16 trackId) const;               // Sets the specified music Track for specified music block.
     void sendMenu(uint32 menu);                                             // Displays a menu (AH,Raise,Tractor,MH etc)
     bool sendGuild(uint16 guildID, uint8 open, uint8 close, uint8 holiday); // Sends guild shop menu
     void openSendBox() const;                                               // Opens send box (to deliver items)
     void leaveGame();
-    void sendEmote(CLuaBaseEntity* target, uint8 emID, uint8 emMode);
+    void sendEmote(const CLuaBaseEntity* target, uint8 emID, uint8 emMode) const;
 
     // Location and Positioning
-    int16 getWorldAngle(sol::variadic_args va);                                 // return angle (rot) between two points (vector from a to b), aligned to absolute cardinal degree
-    int16 getFacingAngle(CLuaBaseEntity const* target);                         // return angle between entity rot and target pos, aligned to number of degrees of difference
-    bool  isFacing(CLuaBaseEntity const* target, sol::object const& angleArg);  // true if you are facing the target
-    bool  isInfront(CLuaBaseEntity const* target, sol::object const& angleArg); // true if you're infront of the input target
-    bool  isBehind(CLuaBaseEntity const* target, sol::object const& angleArg);  // true if you're behind the input target
-    bool  isBeside(CLuaBaseEntity const* target, sol::object const& angleArg);  // true if you're to the side of the input target
+    int16 getWorldAngle(sol::variadic_args va);                                                // return angle (rot) between two points (vector from a to b), aligned to absolute cardinal degree
+    int16 getFacingAngle(CLuaBaseEntity const* target);                                        // return angle between entity rot and target pos, aligned to number of degrees of difference
+    bool  isFacing(CLuaBaseEntity const* target, sol::object const& angleArg);                 // true if you are facing the target
+    bool  isInfront(CLuaBaseEntity const* target, sol::object const& angleArg);                // true if you're infront of the input target
+    bool  isBehind(CLuaBaseEntity const* target, sol::object const& angleArg);                 // true if you're behind the input target
+    bool  isBeside(CLuaBaseEntity const* target, sol::object const& angleArg);                 // true if you're to the side of the input target
+    auto  isToEntitysLeft(CLuaBaseEntity const* target, sol::object const& angleArg) -> bool;  // true if you're to the left side of the input target (from target's perspective)
+    auto  isToEntitysRight(CLuaBaseEntity const* target, sol::object const& angleArg) -> bool; // true if you're to the right side of the input target (from target's perspective)
 
     auto   getZone(sol::object const& arg0) -> CZone*;
     uint16 getZoneID();
@@ -261,8 +265,8 @@ public:
     uint8 getContainerSize(uint8 locationID);
     void  changeContainerSize(uint8 locationID, int8 newSize); // Increase/Decreases container size
     uint8 getFreeSlotsCount(sol::object const& locID);         // Gets value of free slots in Entity inventory
-    void  confirmTrade();                                      // Complete trade with an npc, only removing confirmed items
-    void  tradeComplete();                                     // Complete trade with an npc
+    void  confirmTrade() const;                                // Complete trade with an npc, only removing confirmed items
+    void  tradeComplete() const;                               // Complete trade with an npc
     auto  getTrade() -> CTradeContainer*;
 
     // Equipping
@@ -670,7 +674,7 @@ public:
 
     // Status Effects
     bool  addStatusEffect(sol::variadic_args va);
-    bool  addStatusEffectEx(sol::variadic_args va);
+    auto  addStatusEffectEx(sol::variadic_args va) -> bool;
     auto  getStatusEffect(uint16 StatusID, sol::object const& SubType, sol::object const& SourceType, sol::object const& SourceTypeParam) -> CStatusEffect*;
     auto  getStatusEffectBySource(uint16 StatusID, EffectSourceType SourceType, uint16 SourceTypeParam) -> CStatusEffect*;
     auto  getStatusEffects() -> sol::table;
@@ -704,8 +708,7 @@ public:
     void   fold();
     void   doWildCard(CLuaBaseEntity* PEntity, uint8 total);
     bool   doRandomDeal(CLuaBaseEntity* PTarget);
-    bool   addCorsairRoll(uint8 casterJob, uint8 bustDuration, uint16 effectID, uint16 power, uint32 tick, uint32 duration,
-                          sol::object const& arg6, sol::object const& arg7, sol::object const& arg8);
+    auto   addCorsairRoll(sol::variadic_args va) -> bool;
     bool   hasCorsairEffect();
     bool   hasBustEffect(uint16 id); // Checks to see if a character has a specified busted corsair roll
     uint8  numBustEffects();         // Gets the number of bust effects on the player
@@ -747,8 +750,9 @@ public:
     uint16 getRangedDmgRank();              // Get ranged weapond DMG rating used for calculating rank
     uint16 getAmmoDmg();                    // Get ammo DMG rating
     uint16 getWeaponHitCount(bool offhand); // Get PC weapon hit count (Occasionally Attacks N times weapons)
+    uint32 addDamageFromMultipliers(uint32 damage, PHYSICAL_ATTACK_TYPE attackType, uint8 weaponSlot, bool allowProc);
 
-    void removeAmmo();
+    void removeAmmo(sol::object const& ammoUsed) const;
 
     uint16 getWeaponSkillLevel(uint8 slotID);                        // Get Skill for equipped weapon
     uint16 getWeaponDamageType(uint8 slotID);                        // gets the type of weapon equipped
@@ -759,9 +763,10 @@ public:
     int32 takeWeaponskillDamage(CLuaBaseEntity* attacker, int32 damage, uint8 atkType, uint8 dmgType, uint8 slot, bool primary,
                                 float tpMultiplier, uint16 bonusTP, float targetTPMultiplier);
 
-    int32 takeSpellDamage(CLuaBaseEntity* caster, CLuaSpell* spell, int32 damage, uint8 atkType, uint8 dmgType);
+    void  takeSpellDamage(CLuaBaseEntity* caster, CLuaSpell* spell, int32 damage, uint8 atkType, uint8 dmgType);
     int32 takeSwipeLungeDamage(CLuaBaseEntity* caster, int32 damage, uint8 atkType, uint8 dmgType);
     int32 checkDamageCap(int32 damage);
+    auto  handleSevereDamage(int32 damage, bool isPhysical) -> int32;
 
     // Pets and Automations
     void spawnPet(sol::object const& arg0);
@@ -776,8 +781,6 @@ public:
     void   removeGambit(std::string const& id);
     void   removeAllGambits();
     void   setTrustTPSkillSettings(uint16 trigger, uint16 select, sol::object const& value);
-
-    bool hasValidJugPetItem();
 
     bool   hasPet();
     bool   hasJugPet();
@@ -797,7 +800,7 @@ public:
     void petAttack(CLuaBaseEntity* PEntity);
     void petAbility(uint16 abilityID); // Function exists, but is not implemented.  Warning will be displayed.
     void petRetreat();
-    void familiar();
+    void extendCharm(uint16 minSeconds, uint16 maxSeconds);
 
     void addPetMod(uint16 modID, int16 amount);
     void setPetMod(uint16 modID, int16 amount);
@@ -905,7 +908,7 @@ public:
     void usePetAbility(uint16 skillId, sol::object const& target) const; // forces a pet to use a pet ability
     auto getAbilityDistance(uint16 skillID) -> float;                    // Returns the specified distance for mob skill
     bool hasTPMoves();
-    void drawIn(sol::variadic_args va); // Forces a mob to draw-in the specified target, or its current target with no args
+    void drawIn(const sol::variadic_args& va) const; // Forces a mob to draw-in the specified target, or its current target with no args
 
     void weaknessTrigger(uint8 level);
     void restoreFromChest(CLuaBaseEntity* PLuaBaseEntity, uint32 restoreType);

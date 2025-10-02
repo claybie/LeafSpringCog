@@ -19,14 +19,12 @@
 ===========================================================================
 */
 
-#ifndef _FISHINGUTILS_H
-#define _FISHINGUTILS_H
+#pragma once
 
 #include "common/cbasetypes.h"
 #include "enums/key_items.h"
 #include "items/item_fish.h"
 
-#include <list>
 #include <map>
 #include <vector>
 
@@ -921,7 +919,7 @@ namespace fishingutils
     float               GetHourlyModifier(fish_t* fish);
     float               GetMoonModifier(fish_t* fish);
     uint8               GetLuckyMoonModifier();
-    float               GetWeatherModifier(CCharEntity* PChar);
+    float               GetWeatherModifier(const CCharEntity* PChar);
     uint16              CalculateStamina(int skill, uint8 count);
     uint16              CalculateAttack(bool legendary, uint8 difficulty, rod_t* rod);
     uint16              CalculateHeal(bool legendary, uint8 difficulty, rod_t* rod);
@@ -1003,5 +1001,3 @@ namespace fishingutils
     void InitializeFishingSystem();
     void CleanupFishing();
 }; // namespace fishingutils
-
-#endif // _FISHINGUTILS_H

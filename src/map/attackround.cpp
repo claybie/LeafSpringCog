@@ -23,7 +23,7 @@
 #include "ai/ai_container.h"
 #include "items/item_weapon.h"
 #include "mob_modifier.h"
-#include "packets/inventory_finish.h"
+#include "packets/s2c/0x01d_item_same.h"
 #include "status_effect_container.h"
 
 /************************************************************************
@@ -441,7 +441,7 @@ void CAttackRound::ProcFollowUpAttacks()
                                 }
 
                                 charutils::UpdateItem(PChar, loc, slot, -1);
-                                PChar->pushPacket<CInventoryFinishPacket>();
+                                PChar->pushPacket<GP_SERV_COMMAND_ITEM_SAME>();
                             }
                         }
                     }
@@ -488,12 +488,12 @@ bool CAttackRound::AddFollowUpAttack(PHYSICAL_ATTACK_DIRECTION direction)
  ************************************************************************/
 void CAttackRound::CreateKickAttacks()
 {
-    if (m_attacker->objtype == TYPE_PC && IsH2H())
+    if (IsH2H())
     {
         // kick attack mod (All jobs)
         uint16 kickAttack = m_attacker->getMod(Mod::KICK_ATTACK_RATE);
 
-        if (m_attacker->GetMJob() == JOB_MNK) // MNK (Main job)
+        if (m_attacker->GetMJob() == JOB_MNK && m_attacker->objtype == TYPE_PC) // MNK (Main job)
         {
             kickAttack += ((CCharEntity*)m_attacker)->PMeritPoints->GetMeritValue(MERIT_KICK_ATTACK_RATE, (CCharEntity*)m_attacker);
         }

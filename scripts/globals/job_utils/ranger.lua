@@ -1,8 +1,6 @@
 -----------------------------------
 -- Ranger Job Utilities
 -----------------------------------
-require('scripts/globals/utils')
------------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
 xi.job_utils.ranger = xi.job_utils.ranger or {}
@@ -232,12 +230,6 @@ xi.job_utils.ranger.useShadowbind = function(player, target, ability, action)
     end
 
     local duration      = 30 + player:getMod(xi.mod.SHADOW_BIND_EXT) + player:getJobPointLevel(xi.jp.SHADOWBIND_DURATION)
-    local recycleChance = player:getMod(xi.mod.RECYCLE) + player:getMerit(xi.merit.RECYCLE)
-
-    if player:hasStatusEffect(xi.effect.UNLIMITED_SHOT) then
-        player:delStatusEffect(xi.effect.UNLIMITED_SHOT)
-        recycleChance = 100
-    end
 
     -- TODO: Acc penalty for /RNG, acc vs. mob level?
     if
@@ -250,8 +242,8 @@ xi.job_utils.ranger.useShadowbind = function(player, target, ability, action)
         ability:setMsg(xi.msg.basic.JA_MISS) -- Player uses Shadowbind, but misses.
     end
 
-    if math.random(0, 99) >= recycleChance then
-        player:removeAmmo() -- Shadowbind depletes one round of ammo.
+    if xi.combat.ranged.shouldUseAmmo(player) then
+        player:removeAmmo(1) -- Shadowbind depletes one round of ammo.
     end
 
     return xi.effect.BIND
@@ -279,7 +271,14 @@ xi.job_utils.ranger.useBountyShot = function(player, target, ability, action)
     local playerTHLevel     = player:getMod(xi.mod.TREASURE_HUNTER)
     local newTHLevel        = 0
 
-    player:removeAmmo()
+    -- base animation was for gun, -1 = archery
+    -- Note: hume male's archery animation is bugged and looks like shadowbind
+    if player:getWeaponSkillType(xi.slot.RANGED) == xi.skill.ARCHERY then
+        action:setAnimation(target:getID(), action:getAnimation(target:getID()) - 1)
+    end
+
+    player:removeAmmo(1) -- TODO: does this check recycle?
+
     action:speceffect(target:getID(), 0x01) -- functional, animation not correct without this
     ability:setMsg(xi.msg.basic.JA_NO_EFFECT_2)
 

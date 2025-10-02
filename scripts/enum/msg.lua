@@ -21,10 +21,10 @@ xi.msg.channel =
     EMOTION       = 8,
     -- 9 / 10 / 11 = Does not work / nothing
     GM_PROMPT     = 12, -- Menu prompt from GM
-    NS_SAY        = 13, -- Same as MESSAGE_SAY but has no speaker object displayed
-    NS_SHOUT      = 14, -- Same as MESSAGE_SHOUT but has no speaker object displayed
-    NS_PARTY      = 15, -- Same as MESSAGE_PARTY but has no speaker object displayed
-    NS_LINKSHELL  = 16, -- Same as MESSAGE_LINKSHELL but has no speaker object displayed
+    NS_SAY        = 13, -- NS = "No speaker object displayed", otherwise same as SAY
+    NS_SHOUT      = 14, -- NS = "No speaker object displayed", otherwise same as SHOUT
+    NS_PARTY      = 15, -- NS = "No speaker object displayed", otherwise same as PARTY
+    NS_LINKSHELL  = 16, -- NS = "No speaker object displayed", otherwise same as LINKSHELL
     UNKNOWN_17    = 17, -- 17 through 25 appear to repeat the effects of other values
     UNKNOWN_18    = 18,
     UNKNOWN_19    = 19,
@@ -36,7 +36,7 @@ xi.msg.channel =
     UNKNOWN_25    = 25,
     YELL          = 26,
     LINKSHELL2    = 27, -- Second LS color. Default is Green
-    NS_LINKSHELL2 = 28, -- Same as LINKSHELL_2 but has but has no speaker object displayed
+    NS_LINKSHELL2 = 28, -- NS = "No speaker object displayed", otherwise same as LINKSHELL2
     SYSTEM_3      = 29, -- "Basic system messages" in config menu. Yellow by default.
     LINKSHELL3    = 30, -- Yes really it looks like a 3rd LS may have been planned at some point.
     NS_LINKSHELL3 = 31, -- (assumed as it follows pattern and color)
@@ -122,10 +122,12 @@ xi.msg.basic =
     SKILL_DRAIN_MP                  = 225, -- <user> uses <skill>. <amount> MP drained from <target>
     SKILL_DRAIN_TP                  = 226, -- <user> uses <skill>. <amount> TP drained from <target>
     SELF_HEAL                       = 238, -- <user> uses <skill>. <user> recovers <amount> HP.
+    SELF_HEAL_NOHP                  = 539, -- <user> uses <skill>. <user> regains HP.
     SKILL_ENFEEB_IS                 = 242, -- <user> uses <skill>. <target> is <status>.
     SKILL_ENFEEB                    = 243, -- <user> uses <skill>. <target> receives the effect of <status>.
     SELF_HEAL_SECONDARY             = 263, -- <target> recovers <amount> HP.
     DAMAGE_SECONDARY                = 264, -- <target> takes <amount> points of damage.
+    RECOVERS_MP_SECONDARY           = 276, -- <target> recovers <amount> MP.
     SKILL_GAIN_EFFECT_2             = 319, -- <user> uses <skill>. <target> gains the effect of <status>.
     RANGED_ATTACK_HIT               = 352, -- <user> ranged attack hits <target> for <amount> points of damage.
     RANGED_ATTACK_CRIT              = 353, -- <user> ranged attack scores a critical hit! \n <target> takes <amount> points of damage.
@@ -225,10 +227,11 @@ xi.msg.basic =
     ALREADY_HAVE_KEY_ITEM           = 759, -- You already have key item: <key item>.
 
     -- Distance
-    TARG_OUT_OF_RANGE               = 4,  -- <target> is out of range.
-    UNABLE_TO_SEE_TARG              = 5,  -- Unable to see <target>.
-    LOSE_SIGHT                      = 36, -- You lose sight of <target>.
-    TOO_FAR_AWAY                    = 78, -- <target> is too far away.
+    TARG_OUT_OF_RANGE               = 4,   -- <target> is out of range.
+    TARG_OUT_OF_RANGE_2             = 154, -- <target> is out of range.
+    UNABLE_TO_SEE_TARG              = 5,   -- Unable to see <target>.
+    LOSE_SIGHT                      = 36,  -- You lose sight of <target>.
+    TOO_FAR_AWAY                    = 78,  -- <target> is too far away.
 
     -- Weaponskills
     READIES_WS                      = 43,  -- <actor> readies <weapon_skill>.

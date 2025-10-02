@@ -9,7 +9,7 @@ add_subdirectory(sol)
 # CPM Modules
 if(TRACY_ENABLE)
     # Tracy version tag, without the leading 'v'
-    set(TRACY_VERSION 0.11.1)
+    set(TRACY_VERSION 0.12.2)
 
     # Download client library
     CPMAddPackage(
@@ -236,6 +236,12 @@ CPMAddPackage(
     GIT_TAG 1a1824df7ac798177a521eed952720681b0bf482
 ) # defines: magic_enum
 
+CPMAddPackage(
+    NAME termcolor
+    GITHUB_REPOSITORY ikalnytskyi/termcolor
+    GIT_TAG 89f20096bef51de347ec6f99345f65147359bd7c
+) # defines: termcolor::termcolor
+
 set(SHARED_EXTERNAL_LIBS
     fmt::fmt
     spdlog
@@ -293,6 +299,12 @@ set(WORLD_ONLY_EXTERNAL_LIBS
     nlohmann_json::nlohmann_json
 )
 
+set(TEST_ONLY_EXTERNAL_LIBS
+    bcrypt
+    termcolor::termcolor
+    nlohmann_json::nlohmann_json
+)
+
 #
 # copy external lib lists to parent scope
 #
@@ -319,5 +331,10 @@ set(SEARCH_ONLY_EXTERNAL_LIBS
 
 set(WORLD_ONLY_EXTERNAL_LIBS
     ${WORLD_ONLY_EXTERNAL_LIBS}
+    PARENT_SCOPE
+)
+
+set(TEST_ONLY_EXTERNAL_LIBS
+    ${TEST_ONLY_EXTERNAL_LIBS}
     PARENT_SCOPE
 )

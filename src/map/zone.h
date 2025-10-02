@@ -19,8 +19,7 @@
 ===========================================================================
 */
 
-#ifndef _CZONE_H
-#define _CZONE_H
+#pragma once
 
 #include "common/cbasetypes.h"
 #include "common/mmo.h"
@@ -34,13 +33,16 @@
 
 #include "battlefield_handler.h"
 #include "campaign_handler.h"
-#include "packets/weather.h"
+#include "common/logging.h"
+#include "packets/basic.h"
+#include "spawn_group.h"
 #include "trigger_area.h"
 
 //
 // Forward Declarations
 //
 
+enum class Weather : uint16_t;
 class CNavMesh;
 class ZoneLos;
 
@@ -559,8 +561,8 @@ public:
     uint32             GetIP() const;
     uint16             GetPort() const;
     uint16             GetTax() const;
-    WEATHER            GetWeather();
-    uint32             GetWeatherChangeTime() const;
+    auto               GetWeather() const -> Weather;
+    auto               GetWeatherChangeTime() const -> uint32;
     const std::string& getName();
     zoneLine_t*        GetZoneLine(uint32 zoneLineID);
 
@@ -588,7 +590,7 @@ public:
 
     bool IsWeatherStatic() const;
     bool CanUseMisc(uint16 misc) const;
-    void SetWeather(WEATHER weatherCondition);
+    void SetWeather(Weather weather);
     void UpdateWeather();
     bool CheckMobsPathedBack();
 
@@ -612,7 +614,9 @@ public:
     virtual void InsertTRUST(CBaseEntity* PTrust);
 
     virtual void FindPartyForMob(CBaseEntity* PEntity);
-    virtual void TransportDepart(uint16 boundary, uint16 zone);  // Collect passengers if ship/boat is departing
+
+    virtual void TransportDepart(uint16 boundary, uint16 prevZoneId, uint16 transportId); // Collect passengers if ship/boat is departing
+
     virtual void updateCharLevelRestriction(CCharEntity* PChar); // Removes the character's level restriction. If the zone has a level restriction, it is applied after it is removed.
 
     void InsertTriggerArea(std::unique_ptr<ITriggerArea>&& triggerArea); // Add an active area to the zone
@@ -649,8 +653,9 @@ public:
     CBattlefieldHandler* m_BattlefieldHandler; // BCNM Instances in this zone
     CCampaignHandler*    m_CampaignHandler;    // WOTG campaign information for this zone
 
-    std::unique_ptr<CNavMesh> m_navMesh;
-    std::unique_ptr<ZoneLos>  lineOfSight;
+    std::unique_ptr<CNavMesh>                       m_navMesh;
+    std::unique_ptr<ZoneLos>                        lineOfSight;
+    std::map<uint32_t, std::unique_ptr<spawnGroup>> m_spawnGroups;
 
     timer::time_point m_LoadedAt; // The time the zone was loaded
 
@@ -668,7 +673,7 @@ private:
     uint32         m_zoneIP{};
     bool           m_useNavMesh;
 
-    WEATHER m_Weather;
+    Weather m_Weather;
     uint32  m_WeatherChangeTime;
 
     CZoneEntities* m_zoneEntities;
@@ -704,5 +709,3 @@ protected:
 
     std::unordered_map<std::string, uint32> m_localVars;
 };
-
-#endif

@@ -125,8 +125,9 @@ INSERT INTO `mob_skill_lists` VALUES ('Avatar_Ifrit_Misc',38,844);
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Ifrit_Misc',38,845);
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Ifrit_Misc',38,846);
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Ifrit_Misc',38,847);
-INSERT INTO `mob_skill_lists` VALUES ('Ixion_Melee',39,2341); -- di hoof attack
-INSERT INTO `mob_skill_lists` VALUES ('Ixion_Melee',39,2342); -- di horn attack
+INSERT INTO `mob_skill_lists` VALUES ('Ixion_Melee',39,2329); -- di_horn_attack
+INSERT INTO `mob_skill_lists` VALUES ('Ixion_Melee',39,2330); -- di_bite_attack
+INSERT INTO `mob_skill_lists` VALUES ('Ixion_Melee',39,2331); -- di_kick_attack
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Leviathan_Misc',40,858);
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Leviathan_Misc',40,859);
 INSERT INTO `mob_skill_lists` VALUES ('Avatar_Leviathan_Misc',40,860);
@@ -1013,18 +1014,9 @@ INSERT INTO `mob_skill_lists` VALUES ('Spheroid',235,984);
 INSERT INTO `mob_skill_lists` VALUES ('Spider',236,810);
 INSERT INTO `mob_skill_lists` VALUES ('Spider',236,811);
 INSERT INTO `mob_skill_lists` VALUES ('Spider',236,812);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,990);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,991);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,992);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,993);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,994);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,995);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,996);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,997);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,998);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,999);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,1000);
-INSERT INTO `mob_skill_lists` VALUES ('Structure_Exoplate',237,1001);
+
+-- Spare ID: 237
+
 INSERT INTO `mob_skill_lists` VALUES ('Eldritch_Edge',238,397); -- Flurry of rage
 INSERT INTO `mob_skill_lists` VALUES ('Thunderclaw_Thuban',239,378); -- thunderbolt
 INSERT INTO `mob_skill_lists` VALUES ('Tauri',240,498);
@@ -1204,10 +1196,10 @@ INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1370);
 INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1371);
 INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1372);
 INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1373);
--- INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1374);
+INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1374);
 INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1375);
 INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1376);
--- INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1377);
+INSERT INTO `mob_skill_lists` VALUES ('Yovra',271,1377);
 INSERT INTO `mob_skill_lists` VALUES ('Zdei',272,1463);
 INSERT INTO `mob_skill_lists` VALUES ('Zdei',272,1464);
 INSERT INTO `mob_skill_lists` VALUES ('Zdei',272,1465);
@@ -1233,6 +1225,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Genbu',277,806);
 INSERT INTO `mob_skill_lists` VALUES ('Genbu',277,807);
 INSERT INTO `mob_skill_lists` VALUES ('Genbu',277,808);
 INSERT INTO `mob_skill_lists` VALUES ('Genbu',277,809);
+INSERT INTO `mob_skill_lists` VALUES ('Seiryu',278,813);
 INSERT INTO `mob_skill_lists` VALUES ('Seiryu',278,814);
 INSERT INTO `mob_skill_lists` VALUES ('Seiryu',278,815);
 INSERT INTO `mob_skill_lists` VALUES ('Seiryu',278,816);
@@ -1944,7 +1937,8 @@ INSERT INTO `mob_skill_lists` VALUES ('Picolaton',418,403); -- Stormwind
 INSERT INTO `mob_skill_lists` VALUES ('Dahu',419,802); -- Great Sandstorm
 INSERT INTO `mob_skill_lists` VALUES ('Huwasi',420,678); -- Crystal Rain
 INSERT INTO `mob_skill_lists` VALUES ('Rogue_Receptacle',421,520); -- Double Ray
--- 422 to 435: free
+INSERT INTO `mob_skill_lists` VALUES ('Ullikummi',422,1035); -- Heavy Strike
+-- 423 to 435: free
 INSERT INTO `mob_skill_lists` VALUES ('Bloodlapper',436,2162);
 INSERT INTO `mob_skill_lists` VALUES ('Ghillie_Dhu',437,685);
 INSERT INTO `mob_skill_lists` VALUES ('Highlander_Lizard',438,371);
@@ -2457,6 +2451,8 @@ INSERT INTO `mob_skill_lists` VALUES ('Jug_Mandragora',734,679);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Tiger',735,680);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Tiger',735,681);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Tiger',735,682);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Tiger',735,795);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Tiger',735,796);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lizard',736,683);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lizard',736,684);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lizard',736,685);
@@ -2481,7 +2477,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Jug_Funguar',740,703);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Funguar',740,704);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Funguar',740,705);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Funguar',740,706);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Beetle',741,707); -- check id
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Beetle',741,707);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Beetle',741,708);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Beetle',741,709);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Beetle',741,710);
@@ -2521,10 +2517,17 @@ INSERT INTO `mob_skill_lists` VALUES ('Jug_Ladybug',750,738);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Raptor',751,743);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Raptor',751,744);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Raptor',751,745);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Slug',752,747);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Slug',752,748);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,749);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,750);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,751);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,752);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,797);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Hippogryph',753,798);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Adamantoise',754,753);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Adamantoise',754,754);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Adamantoise',754,755);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Apkallu',755,756);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Apkallu',755,757);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Pugil',756,758);
@@ -2553,11 +2556,10 @@ INSERT INTO `mob_skill_lists` VALUES ('Jug_Lynx',765,730);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lynx',765,731);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lynx',765,746);
 INSERT INTO `mob_skill_lists` VALUES ('Jug_Lynx',765,790);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Lycopodium',766,675);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Lycopodium',766,676);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Lycopodium',766,677);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Lycopodium',766,678);
-INSERT INTO `mob_skill_lists` VALUES ('Jug_Lycopodium',766,679);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Citrullus',766,675);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Citrullus',766,677);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Citrullus',766,678);
+INSERT INTO `mob_skill_lists` VALUES ('Jug_Citrullus',766,679);
 
 INSERT INTO `mob_skill_lists` VALUES ('Lamina-Hyakinthos',767,2210);
 INSERT INTO `mob_skill_lists` VALUES ('Corse_NM_staff',768,530);
@@ -3154,7 +3156,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Amarok',930,1788); -- Ululation
 INSERT INTO `mob_skill_lists` VALUES ('Amarok',930,1789); -- Magma_Hoplon
 -- 931: free
 INSERT INTO `mob_skill_lists` VALUES ('Battlerigged_Chariot',932,2054); -- Diffusion_ray
-INSERT INTO `mob_skill_lists` VALUES ('Battlerigged_Chariot',932,2055); -- Intertia_stream
+INSERT INTO `mob_skill_lists` VALUES ('Battlerigged_Chariot',932,2055); -- Inertia_stream
 INSERT INTO `mob_skill_lists` VALUES ('Bennu',933,399); -- Scratch
 INSERT INTO `mob_skill_lists` VALUES ('Bennu',933,400); -- Triple_Attack
 INSERT INTO `mob_skill_lists` VALUES ('Bennu',933,401); -- Gliding_Spike
@@ -3194,7 +3196,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Ironclad_Smiter',942,2620); -- Seismic_Im
 INSERT INTO `mob_skill_lists` VALUES ('Ironclad_Smiter',942,2622); -- Arm_Cannon
 INSERT INTO `mob_skill_lists` VALUES ('Ironclad_Smiter',942,2623); -- Ballistic_Kick
 INSERT INTO `mob_skill_lists` VALUES ('Ironclad_Smiter',942,2624); -- Scapula_Beam
-INSERT INTO `mob_skill_lists` VALUES ('Long-Barreled_Chariot',943,2055); -- Intertia_stream
+INSERT INTO `mob_skill_lists` VALUES ('Long-Barreled_Chariot',943,2055); -- Inertia_stream
 INSERT INTO `mob_skill_lists` VALUES ('Long-Barreled_Chariot',943,2056); -- Discharge
 INSERT INTO `mob_skill_lists` VALUES ('Long-Barreled_Chariot',943,2058); -- PW_Homing_missile
 INSERT INTO `mob_skill_lists` VALUES ('Orthrus',944,1785); -- Lava_Spit
@@ -3267,7 +3269,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Empousa_Ground',961,2423); -- Triumphant_
 INSERT INTO `mob_skill_lists` VALUES ('Empousa_Ground',961,2424); -- Terror_eye
 INSERT INTO `mob_skill_lists` VALUES ('Empousa_Ground',961,2425); -- Bloody_claw
 INSERT INTO `mob_skill_lists` VALUES ('Impervious_Chariot',963,2054); -- Diffusion_ray
-INSERT INTO `mob_skill_lists` VALUES ('Impervious_Chariot',963,2055); -- Intertia_stream
+INSERT INTO `mob_skill_lists` VALUES ('Impervious_Chariot',963,2055); -- Inertia_stream
 INSERT INTO `mob_skill_lists` VALUES ('Impervious_Chariot',963,2056); -- Discharge
 INSERT INTO `mob_skill_lists` VALUES ('Indrik',964,2337); -- Damsel_memento
 INSERT INTO `mob_skill_lists` VALUES ('Indrik',964,2338); -- Rampant_stance
@@ -3297,7 +3299,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Pantokrator',968,1533); -- Pile_Pitch
 INSERT INTO `mob_skill_lists` VALUES ('Pantokrator',968,1534); -- Guided_Missile
 -- INSERT INTO `mob_skill_lists` VALUES ('Pantokrator',968,1539); -- Rear_Lasers
 INSERT INTO `mob_skill_lists` VALUES ('Refitted_Chariot',969,2054); -- Diffusion_ray
-INSERT INTO `mob_skill_lists` VALUES ('Refitted_Chariot',969,2055); -- Intertia_stream
+INSERT INTO `mob_skill_lists` VALUES ('Refitted_Chariot',969,2055); -- Inertia_stream
 INSERT INTO `mob_skill_lists` VALUES ('Refitted_Chariot',969,2056); -- Discharge
 INSERT INTO `mob_skill_lists` VALUES ('Resheph',970,362); -- Double_Claw
 INSERT INTO `mob_skill_lists` VALUES ('Resheph',970,365); -- Spinning_Top
@@ -3322,7 +3324,7 @@ INSERT INTO `mob_skill_lists` VALUES ('Alfard',976,1836); -- Nerve_Gas
 -- INSERT INTO `mob_skill_lists` VALUES ('Amphitrite',977,506); -- Palsynyxis
 -- INSERT INTO `mob_skill_lists` VALUES ('Amphitrite',977,507); -- Painful_Whip
 -- INSERT INTO `mob_skill_lists` VALUES ('Amphitrite',977,2693); -- Virulent_Haze
-INSERT INTO `mob_skill_lists` VALUES ('Assailer_Chariot',978,2055); -- Intertia_stream
+INSERT INTO `mob_skill_lists` VALUES ('Assailer_Chariot',978,2055); -- Inertia_stream
 INSERT INTO `mob_skill_lists` VALUES ('Assailer_Chariot',978,2056); -- Discharge
 INSERT INTO `mob_skill_lists` VALUES ('Assailer_Chariot',978,2059); -- PW_Discoid
 INSERT INTO `mob_skill_lists` VALUES ('Azdaja',979,1309); -- Cyclone_Wing
@@ -3681,9 +3683,6 @@ INSERT INTO `mob_skill_lists` VALUES ('Blizzard_Wyvern',1140,816); -- Fang Rush
 INSERT INTO `mob_skill_lists` VALUES ('Blizzard_Wyvern',1140,817); -- Dread Shriek
 INSERT INTO `mob_skill_lists` VALUES ('Blizzard_Wyvern',1140,818); -- Tail Crush
 INSERT INTO `mob_skill_lists` VALUES ('Blizzard_Wyvern',1140,819); -- Blizzard Breath
-INSERT INTO `mob_skill_lists` VALUES ('Luopan',1141,3045); -- Concentric Pulse
-INSERT INTO `mob_skill_lists` VALUES ('Luopan',1141,3051); -- Mending Halation
-INSERT INTO `mob_skill_lists` VALUES ('Luopan',1141,3052); -- Radial Arcana
 INSERT INTO `mob_skill_lists` VALUES ('Bashe',1142,370); -- Baleful Gaze
 INSERT INTO `mob_skill_lists` VALUES ('Kamlanaut (Apoc Nigh)',1143,829); -- Great Wheel
 INSERT INTO `mob_skill_lists` VALUES ('Kamlanaut (Apoc Nigh)',1143,830); -- Light Blade
@@ -4155,7 +4154,31 @@ INSERT INTO `mob_skill_lists` VALUES ('Vampyr_Jarl',2054,2112); -- Nocturnal Ser
 INSERT INTO `mob_skill_lists` VALUES ('Tenzen_Ranged_High',2055,1398); -- Tenzen Ranged Attack
 INSERT INTO `mob_skill_lists` VALUES ('Tenzen_Ranged_Low',2056,1400); -- Tenzen Ranged Attack
 
--- Next ID : 2057
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_1',2057,990);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_1',2057,991);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_1',2057,992);
+
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_2',2058,994);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_2',2058,995);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_2',2058,996);
+
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_3',2059,998);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_3',2059,999);
+INSERT INTO `mob_skill_lists` VALUES ('Exoplate_Phase_3',2059,1000);
+
+INSERT INTO `mob_skill_lists` VALUES ('Infernal_Swarm',2060,334);
+INSERT INTO `mob_skill_lists` VALUES ('Infernal_Swarm',2060,335);
+
+INSERT INTO `mob_skill_lists` VALUES ('Dark_Ixion',2061,2333); -- di_glow, to telegraph next mobskill
+INSERT INTO `mob_skill_lists` VALUES ('Dark_Ixion',2061,2337); -- damsel memento
+
+INSERT INTO `mob_skill_lists` VALUES ('Gladiatorial_Weapon',2062,396);
+INSERT INTO `mob_skill_lists` VALUES ('Gladiatorial_Weapon',2062,397);
+INSERT INTO `mob_skill_lists` VALUES ('Gladiatorial_Weapon',2062,398);
+INSERT INTO `mob_skill_lists` VALUES ('Gladiatorial_Weapon',2062,513);
+INSERT INTO `mob_skill_lists` VALUES ('Gladiatorial_Weapon',2062,514);
+
+-- Next ID : 2063
 
 -- ------------------------------------------------------------
 -- Start of Ambuscade section

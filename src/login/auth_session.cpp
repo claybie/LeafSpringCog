@@ -208,37 +208,11 @@ void auth_session::read_func()
                 {
                     db::preparedStmt("UPDATE accounts SET accounts.timelastmodify = NULL WHERE accounts.id = ?", accountID);
 
-                    const auto rset = db::preparedStmt("SELECT charid, server_addr, server_port "
-                                                       "FROM accounts_sessions JOIN accounts "
-                                                       "ON accounts_sessions.accid = accounts.id "
-                                                       "WHERE accounts.id = ?",
-                                                       accountID);
+                    const auto payload = ipc::toBytesWithHeader(ipc::AccountLogin{
+                        .accountId = accountID,
+                    });
 
-                    if (rset && rset->rowsCount() == 1)
-                    {
-                        while (rset->next())
-                        {
-                            // NOTE: This only fires if there is already a session, so `CharLogin`
-                            //     : could be named better. Could this be used to eject existing sessions?
-
-                            // TODO: MSG_LOGIN is a no-op in message_server.cpp,
-                            //     : so sending this does nothing?
-                            //     : But in the client (message.cpp), it _could_
-                            //     : be used to clear out lingering PChar data.
-
-                            const auto charId = rset->get<uint32>("charid");
-
-                            // TODO: Make a thin wrapper around ZMQDealerWrapper to make it easier
-                            //     : to send messages to the world server from connect and search.
-
-                            const auto payload = ipc::toBytesWithHeader(ipc::CharLogin{
-                                .accountId = accountID,
-                                .charId    = charId,
-                            });
-
-                            zmqDealerWrapper_.outgoingQueue_.enqueue(zmq::message_t(payload.data(), payload.size()));
-                        }
-                    }
+                    zmqDealerWrapper_.outgoingQueue_.enqueue(zmq::message_t(payload.data(), payload.size()));
 
                     // TODO: Lock out same account logging in multiple times. Can check data/view session existence on same IP/account?
                     // Not a real problem because the account is locked out when a character is logged in.
@@ -323,10 +297,10 @@ void auth_session::read_func()
                 // creating new account_id
                 uint32 accid = 0;
 
-                const auto rset1 = db::preparedStmt("SELECT max(accounts.id) FROM accounts");
+                const auto rset1 = db::preparedStmt("SELECT COALESCE(MAX(accounts.id), 0) AS max_id FROM accounts");
                 if (rset1 && rset1->rowsCount() != 0 && rset1->next())
                 {
-                    accid = rset1->get<uint32>("max(accounts.id)") + 1;
+                    accid = rset1->get<uint32>("max_id") + 1;
                 }
                 else
                 {

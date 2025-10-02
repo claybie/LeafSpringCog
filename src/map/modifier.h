@@ -69,6 +69,16 @@ enum class Mod
     LIGHT_RES_RANK   = 198, // Light Resistance Rank
     DARK_RES_RANK    = 199, // Dark Resistance Rank
 
+    // Magic Evasion RANK versus status effects (resistance ranks)
+    PARALYZE_RES_RANK    = 1160,
+    BIND_RES_RANK        = 1161,
+    SILENCE_RES_RANK     = 1162,
+    SLOW_RES_RANK        = 1163,
+    POISON_RES_RANK      = 1164,
+    LIGHT_SLEEP_RES_RANK = 1165,
+    DARK_SLEEP_RES_RANK  = 1166,
+    BLIND_RES_RANK       = 1167,
+
     ATT  = 23, // Attack
     RATT = 24, // Ranged Attack
 
@@ -254,14 +264,15 @@ enum class Mod
     DARK_ABSORB       = 466, // Occasionally absorbs dark elemental damage.
 
     // Crit Damage / Delay
-    CRITHITRATE              = 165, // Raises chance to crit
-    CRITHITRATE_ONLY_WEP     = 141, // Raises chance to crit (but only for attacks with the specific weapon that has the mod)
-    CRIT_DMG_INCREASE        = 421, // Raises the damage of critical hit by percent %
-    RANGED_CRIT_DMG_INCREASE = 964, // Increases ranged critical damage by a percent
-    CRITICAL_HIT_EVASION     = 166, // Modifies chance enemy will crit
-    CRIT_DEF_BONUS           = 908, // Reduces crit hit damage
-    MAGIC_CRITHITRATE        = 562, // Raises chance to magic crit
-    MAGIC_CRIT_DMG_INCREASE  = 563, // Raises damage done when criting with magic
+    CRITHITRATE              = 165,  // Raises chance to crit
+    CRITHITRATE_ONLY_WEP     = 141,  // Raises chance to crit (but only for attacks with the specific weapon that has the mod)
+    CRIT_DMG_INCREASE        = 421,  // Raises the damage of critical hit by percent %
+    RANGED_CRIT_DMG_INCREASE = 964,  // Increases ranged critical damage by a percent
+    CRITICAL_HIT_EVASION     = 166,  // Modifies chance enemy will crit
+    CRIT_DEF_BONUS           = 908,  // Reduces crit hit damage
+    MAGIC_CRITHITRATE        = 562,  // Raises chance to magic crit
+    MAGIC_CRITHITRATE_II     = 1168, // Raises chance to add a critical 1.25 magic damage multiplier.
+    MAGIC_CRIT_DMG_INCREASE  = 563,  // Raises damage done when criting with magic
 
     FENCER_TP_BONUS    = 903, // TP Bonus to weapon skills from Fencer Trait
     FENCER_CRITHITRATE = 904, // Increased Crit chance from Fencer Trait
@@ -518,6 +529,7 @@ enum class Mod
     // Beastmaster
     TAME                         = 304,  // Additional percent chance to charm
     CHARM_TIME                   = 360,  // extends the charm time only, no effect of charm chance
+    FAMILIAR_BONUS               = 1169, // Bonus minutes of charm and haste when using familiar
     REWARD_HP_BONUS              = 364,  // Percent to add to reward HP healed. (364)
     CHARM_CHANCE                 = 391,  // extra chance to charm (light+apollo staff ect)
     FERAL_HOWL_DURATION          = 503,  // +20% duration per merit when wearing augmented Monster Jackcoat +2
@@ -733,24 +745,25 @@ enum class Mod
     STEP_TP_CONSUMED         = 1077, // Modifies the amount of TP consumed when using steps
 
     // Scholar
-    BLACK_MAGIC_COST         = 393, // MP cost for black magic (light/dark arts)
-    WHITE_MAGIC_COST         = 394, // MP cost for white magic (light/dark arts)
-    BLACK_MAGIC_CAST         = 395, // Cast time for black magic (light/dark arts)
-    WHITE_MAGIC_CAST         = 396, // Cast time for black magic (light/dark arts)
-    BLACK_MAGIC_RECAST       = 397, // Recast time for black magic (light/dark arts)
-    WHITE_MAGIC_RECAST       = 398, // Recast time for white magic (light/dark arts)
-    ALACRITY_CELERITY_EFFECT = 399, // Bonus for celerity/alacrity effect
-    LIGHT_ARTS_EFFECT        = 334, //
-    DARK_ARTS_EFFECT         = 335, //
-    LIGHT_ARTS_SKILL         = 336, //
-    DARK_ARTS_SKILL          = 337, //
-    LIGHT_ARTS_REGEN         = 338, // Regen bonus flat HP amount from Light Arts and Tabula Rasa
-    REGEN_DURATION           = 339, //
-    HELIX_EFFECT             = 478, //
-    HELIX_DURATION           = 477, //
-    STORMSURGE_EFFECT        = 400, //
-    SUBLIMATION_BONUS        = 401, //
-    GRIMOIRE_SPELLCASTING    = 489, // "Grimoire: Reduces spellcasting time" bonus
+    BLACK_MAGIC_COST         = 393,  // MP cost for black magic (light/dark arts)
+    WHITE_MAGIC_COST         = 394,  // MP cost for white magic (light/dark arts)
+    BLACK_MAGIC_CAST         = 395,  // Cast time for black magic (light/dark arts)
+    WHITE_MAGIC_CAST         = 396,  // Cast time for black magic (light/dark arts)
+    BLACK_MAGIC_RECAST       = 397,  // Recast time for black magic (light/dark arts)
+    WHITE_MAGIC_RECAST       = 398,  // Recast time for white magic (light/dark arts)
+    ALACRITY_CELERITY_EFFECT = 399,  // Bonus for celerity/alacrity effect
+    LIGHT_ARTS_EFFECT        = 334,  //
+    DARK_ARTS_EFFECT         = 335,  //
+    LIGHT_ARTS_SKILL         = 336,  //
+    DARK_ARTS_SKILL          = 337,  //
+    LIGHT_ARTS_REGEN         = 338,  // Regen bonus flat HP amount from Light Arts and Tabula Rasa
+    REGEN_DURATION           = 339,  //
+    HELIX_EFFECT             = 478,  //
+    HELIX_DURATION           = 477,  //
+    STORMSURGE_EFFECT        = 400,  //
+    SUBLIMATION_BONUS        = 401,  //
+    GRIMOIRE_SPELLCASTING    = 489,  // "Grimoire: Reduces spellcasting time" bonus
+    STRATAGEM_RECAST         = 1159, // Recast reduction in seconds
 
     // Geo
     CARDINAL_CHANT       = 959,
@@ -1104,7 +1117,7 @@ enum class Mod
     // The spares take care of finding the next ID to use so long as we don't forget to list IDs that have been freed up by refactoring.
     // 570 through 825 used by WS DMG mods these are not spares.
     //
-    // SPARE IDs: 1159 and onward
+    // SPARE IDs: 1170 and onward
 };
 
 // temporary workaround for using enum class as unordered_map key until compilers support it

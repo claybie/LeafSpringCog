@@ -92,23 +92,15 @@
 
 // TODO: These are all hacks and shouldn't be globally exposed like this!
 
-std::unique_ptr<SqlConnection>  _sql;
 extern std::map<uint16, CZone*> g_PZoneList; // Global array of pointers for zones
 
 MapEngine::MapEngine(asio::io_context& io_context, MapConfig& config)
-: mapStatistics_(std::make_unique<MapStatistics>())
-, networking_(std::make_unique<MapNetworking>(*mapStatistics_, config, io_context))
+: ioContext_(io_context)
+, mapStatistics_(std::make_unique<MapStatistics>())
+, networking_(std::make_unique<MapNetworking>(*mapStatistics_, config, ioContext_))
 , engineConfig_(config)
 {
     do_init();
-
-    // Queue the first game loop iteration
-    // clang-format off
-    asio::post(io_context, [&]()
-    {
-        gameLoop(io_context);
-    });
-    // clang-format on
 }
 
 MapEngine::~MapEngine()
@@ -163,15 +155,21 @@ void MapEngine::prepareWatchdog()
     // clang-format on
 }
 
-void MapEngine::gameLoop(asio::io_context& io_context)
+void MapEngine::gameLoop()
 {
+    TracyZoneNamed(_tasks, "MapEngine Main Loop");
+
     timer::duration tasksDuration;
     timer::duration networkDuration;
     timer::duration tickDuration;
 
     const auto tickStart = timer::now();
     {
+        TracyZoneNamed(_tasks, "MapEngine Tasks");
         tasksDuration = CTaskManager::getInstance()->doExpiredTasks(tickStart);
+    }
+    {
+        TracyZoneNamed(_networking, "MapEngine Networking");
         // Use tick remainder for networking with a maximum to ensure that the network phase
         // doesn't starve and a minimum to prevent bumping up against the time limit.
         networkDuration = networking_->doSocketsBlocking(kMainLoopInterval - std::clamp<timer::duration>(tasksDuration, 50ms, 150ms));
@@ -192,24 +190,20 @@ void MapEngine::gameLoop(asio::io_context& io_context)
                         timer::count_milliseconds(tickDuration),
                         timer::count_milliseconds(tickDiffTime));
 
-    watchdog_->update();
+    if (watchdog_)
+    {
+        watchdog_->update();
+    }
 
     if (tickDiffTime > 0ms)
     {
+        TracyZoneNamed(_sleep, "MapEngine Sleep");
         std::this_thread::sleep_for(tickDiffTime);
     }
     else if (tickDiffTime < -kMainLoopBacklogThreshold)
     {
         RATE_LIMIT(15s, ShowWarningFmt("Main loop is running {}ms behind, performance is degraded!", -timer::count_milliseconds(tickDiffTime)));
     }
-
-    // Requeue loop
-    // clang-format off
-    asio::post(io_context, [&]()
-    {
-        gameLoop(io_context);
-    });
-    // clang-format on
 }
 
 void MapEngine::do_init()
@@ -235,10 +229,7 @@ void MapEngine::do_init()
     ShowInfo(fmt::format("Random samples (integer): {}", utils::getRandomSampleString(0, 255)));
     ShowInfo(fmt::format("Random samples (float): {}", utils::getRandomSampleString(0.0f, 1.0f)));
 
-    // TODO: Get rid of legacy _sql and SqlConnection
     ShowInfo("do_init: connecting to database");
-    _sql = std::make_unique<SqlConnection>();
-
     ShowInfo(fmt::format("database name: {}", db::getDatabaseSchema()).c_str());
     ShowInfo(fmt::format("database server version: {}", db::getDatabaseVersion()).c_str());
     ShowInfo(fmt::format("database client version: {}", db::getDriverVersion()).c_str());
@@ -307,21 +298,30 @@ void MapEngine::do_init()
         ShowInfo("./losmeshes/ directory isn't present or is empty");
     }
 
-    ShowInfo("do_init: loading zones");
-    zoneutils::LoadZoneList(mapIPP);
+    if (!engineConfig_.lazyZones)
+    {
+        ShowInfo("do_init: loading zones");
+        zoneutils::LoadZoneList(mapIPP);
+        instanceutils::LoadInstanceList(mapIPP);
+        CTransportHandler::getInstance()->InitializeTransport(mapIPP);
+    }
 
     fishingutils::InitializeFishingSystem();
-    instanceutils::LoadInstanceList(mapIPP);
 
     monstrosity::LoadStaticData();
 
-    zoneutils::InitializeWeather(); // Need VanaTime initialized
+    if (!engineConfig_.controlledWeather)
+    {
+        zoneutils::InitializeWeather(); // Need VanaTime initialized
+    }
 
-    CTransportHandler::getInstance()->InitializeTransport(mapIPP);
+    if (!engineConfig_.isTestServer)
+    {
+        CTaskManager::getInstance()->AddTask("map_cleanup", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, 5s, std::bind(&MapEngine::map_cleanup, this, std::placeholders::_1, std::placeholders::_2));
+        CTaskManager::getInstance()->AddTask("garbage_collect", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, 15min, std::bind(&MapEngine::map_garbage_collect, this, std::placeholders::_1, std::placeholders::_2));
+    }
 
     CTaskManager::getInstance()->AddTask("time_server", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, kTimeServerTickInterval, time_server);
-    CTaskManager::getInstance()->AddTask("map_cleanup", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, 5s, std::bind(&MapEngine::map_cleanup, this, std::placeholders::_1, std::placeholders::_2));
-    CTaskManager::getInstance()->AddTask("garbage_collect", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, 15min, std::bind(&MapEngine::map_garbage_collect, this, std::placeholders::_1, std::placeholders::_2));
     CTaskManager::getInstance()->AddTask("persist_server_vars", timer::now(), nullptr, CTaskManager::TASK_INTERVAL, 1min, serverutils::PersistVolatileServerVars);
 
     zoneutils::TOTDChange(vanadiel_time::get_totd()); // This tells the zones to spawn stuff based on time of day conditions (such as undead at night)
@@ -339,10 +339,12 @@ void MapEngine::do_init()
 
     moduleutils::ReportLuaModuleUsage();
 
-    _sql->EnableTimers();
     db::enableTimers();
 
-    prepareWatchdog();
+    if (!engineConfig_.isTestServer)
+    {
+        prepareWatchdog();
+    }
 
 #ifdef TRACY_ENABLE
     ShowInfo("*** TRACY IS ENABLED ***");

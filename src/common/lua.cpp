@@ -24,6 +24,7 @@
 #include "logging.h"
 #include "tracy.h"
 
+#include <iostream>
 #include <numeric>
 #include <string>
 
@@ -79,6 +80,11 @@ void lua_init()
         result.get<sol::table>()["start"];
         std::cout << "Started script debugger\n";
     }
+}
+
+void lua_cleanup()
+{
+    lua = sol::state();
 }
 
 /**

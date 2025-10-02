@@ -28,7 +28,7 @@
 #include "entities/charentity.h"
 #include "items/item_weapon.h"
 #include "latent_effect_container.h"
-#include "packets/lock_on.h"
+#include "packets/s2c/0x058_assist.h"
 #include "recast_container.h"
 #include "roe.h"
 #include "status_effect_container.h"
@@ -79,7 +79,7 @@ bool CPlayerController::Engage(uint16 targid)
                 if (CController::Engage(targid))
                 {
                     PChar->PLatentEffectContainer->CheckLatentsWeaponDraw(true);
-                    PChar->pushPacket<CLockOnPacket>(PChar, PTarget);
+                    PChar->pushPacket<GP_SERV_COMMAND_ASSIST>(PChar, PTarget);
                     return true;
                 }
             }
@@ -127,7 +127,7 @@ bool CPlayerController::Ability(uint16 targid, uint16 abilityid)
             // Set recast time to the normal recast time minus any charge time.
             // Abilities without a charge will have zero chargeTime
             timer::duration currentRecast = recast->TimeStamp - timer::now() + recast->RecastTime;
-            // Abilities with a single charge (low-level scholoar stratagems) behave like abilities without a charge
+            // Abilities with a single charge (low-level scholar stratagems) behave like abilities without a charge
             if (recast->maxCharges > 1)
             {
                 currentRecast -= recast->chargeTime * (recast->maxCharges - 1);

@@ -679,6 +679,7 @@ INSERT INTO `mob_spell_lists` VALUES ('Genbu',24,227,1,255); -- poisonga_iii (1~
 INSERT INTO `mob_spell_lists` VALUES ('Genbu',24,240,1,255); -- drown (1~255)
 
 -- Seiryu (25)
+INSERT INTO `mob_spell_lists` VALUES ('Seiryu',25,53,1,255);  -- blink (1~255)
 INSERT INTO `mob_spell_lists` VALUES ('Seiryu',25,157,1,255); -- aero_iv (1~255)
 INSERT INTO `mob_spell_lists` VALUES ('Seiryu',25,186,1,255); -- aeroga_iii (1~255)
 INSERT INTO `mob_spell_lists` VALUES ('Seiryu',25,208,1,255); -- tornado (1~255)
@@ -5029,7 +5030,27 @@ INSERT INTO `mob_spell_lists` VALUES ('Bastet',493,239,1,255); -- Shock (1~255)
 INSERT INTO `mob_spell_lists` VALUES ('Bastet',493,251,1,255); -- Shock Spikes (1~255)
 INSERT INTO `mob_spell_lists` VALUES ('Bastet',493,252,1,255); -- Stun (1~255)
 
--- IDs 494-496 free for use
+-- Ullikummi (494)
+INSERT INTO `mob_spell_lists` VALUES ('Ullikummi',494,34,1,255);  -- Diaga II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ullikummi',494,40,1,255);  -- Banishga III (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ullikummi',494,112,1,255); -- Flash (1~255)
+
+-- Olla Grande
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,21,50,94);   -- holy (50~94)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,24,36,255);  -- dia_ii (36~64)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,31,73,255);  -- banish_iv (73~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,35,74,255);  -- diaga_iii (74~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,40,69,255);  -- banishga_iii (69~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,53,19,255);  -- blink (19~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,54,28,255);  -- stoneskin (28~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,56,13,255);  -- slow (13~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,57,40,255);  -- haste (40~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,58,4,255);   -- paralyze (4~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,59,15,255);  -- silence (15~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,111,66,255); -- regen_iii (66~255)
+INSERT INTO `mob_spell_lists` VALUES ('Olla_Grande',495,112,45,255); -- flash (45~255)
+
+-- ID 496 free for use
 
 -- Cemetery Cherry
 INSERT INTO `mob_spell_lists` VALUES ('Cemetery_Cherry',497,274,1,255); -- Sleepga II
@@ -5631,7 +5652,59 @@ INSERT INTO `mob_spell_lists` VALUES ('T3_Ga_Spells',549,201,1,255);  -- Waterga
 -- Giollemitte B Feroun (550)
 INSERT INTO `mob_spell_lists` VALUES ('Giollemitte_B_Feroun',550,112,37,255);  -- Flash (1~255)
 
--- Next Available: 551
+-- Marquis Andrealphus (DRK) (551)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,144,1,255); -- Fire (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,164,1,255); -- Thunder (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,149,1,255); -- Blizzard (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,154,1,255); -- Aero (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,160,1,255); -- Stone II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,170,1,255); -- Water II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,220,1,255); -- Poison (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,231,1,255); -- Bio II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,245,1,255); -- Drain (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,247,1,255); -- Aspir (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,266,1,255); -- Absorb-STR (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,267,1,255); -- Absorb-DEX (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,268,1,255); -- Absorb-VIT (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,269,1,255); -- Absorb-AGI (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,270,1,255); -- Absorb-INT (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,271,1,255); -- Absorb-MND (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,272,1,255); -- Absorb-CHR (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Marquis_Andrealphus',551,275,1,255); -- Absorb-TP (1~255)
+
+-- Demon Secretary (BLM) (552)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,145,1,255); -- Fire II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,150,1,255); -- Blizzard II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,165,1,255); -- Thunder II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,170,1,255); -- Water II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,174,1,255); -- Firaga (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,185,1,255); -- Aeroga II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,190,1,255); -- Stonega II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,194,1,255); -- Thundaga (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,221,1,255); -- Poison II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,231,1,255); -- Bio II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,235,1,255); -- Burn (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,236,1,255); -- Frost (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,237,1,255); -- Choke (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,240,1,255); -- Drown (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,245,1,255); -- Drain (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,247,1,255); -- Aspir (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,249,1,255); -- Blaze Spikes (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,252,1,255); -- Stun (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,253,1,255); -- Sleep (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,254,1,255); -- Blind (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,258,1,255); -- Bind (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,259,1,255); -- Sleep II (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Demon_Secretary',552,273,1,255); -- Sleepga (1~255)
+
+-- Xarcabard NM Ereshkigal
+INSERT INTO `mob_spell_lists` VALUES ('Ereshkigal',553,150,1,255); -- blizzard_ii (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ereshkigal',553,179,1,255); -- blizzaga (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ereshkigal',553,206,1,255); -- freeze (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ereshkigal',553,231,1,255); -- bio_ii (1~255)
+INSERT INTO `mob_spell_lists` VALUES ('Ereshkigal',553,250,1,255); -- ice_spikes (1~255)
+
+-- Next Available: 554
 
 /*!40000 ALTER TABLE `mob_spell_lists` ENABLE KEYS */;
 UNLOCK TABLES;
