@@ -34,6 +34,7 @@ class CLuaBaseEntity;
 
 enum class REGION_TYPE : uint8;
 enum NATION_TYPE : uint8;
+enum ZONEID : uint16;
 
 enum class ClientScope : uint8_t
 {
@@ -57,7 +58,6 @@ public:
     CLuaSimulation(CLuaSimulation&&)                 = default;
     CLuaSimulation& operator=(CLuaSimulation&&)      = default;
 
-    void loadZone(sol::variadic_args va) const;
     void cleanClients(std::optional<ClientScope> scope = std::nullopt);
     void tick(std::optional<TickType> boundary = std::nullopt) const;
     void processClientUpdates() const;
@@ -71,6 +71,7 @@ public:
     void seed() const;
     void setSetupContext(bool inSetup);
     auto spawnPlayer(sol::optional<sol::table> params) -> CLuaClientEntityPair*;
+    auto getSpawnSlot(ZONEID zoneId, uint32 slotId) const -> sol::table;
 
     static void Register();
 

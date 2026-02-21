@@ -164,15 +164,36 @@ xi.pet.applyFamiliarBuffs = function(owner, pet)
     -- wakes up pets
     pet:addHP(addedHP)
 
-    -- adds % bonuses to the following stats
-    -- TODO are these the only stats boosted?
-    pet:addMod(xi.mod.ATTP, familiarBoost)
-    pet:addMod(xi.mod.RATTP, familiarBoost)
-    pet:addMod(xi.mod.DEFP, familiarBoost)
-    pet:addMod(xi.mod.ACC, pet:getMod(xi.mod.ACC) * familiarBoostPerc)
-    pet:addMod(xi.mod.RACC, pet:getMod(xi.mod.RACC) * familiarBoostPerc)
-    pet:addMod(xi.mod.EVA, pet:getMod(xi.mod.EVA) * familiarBoostPerc)
-
     -- TODO does familiar give some bonus resistance to crowd control? Is it only for mob pets?
     -- Lots of reports of mobs using Familiar and the pet having higher chance to resist bind/sleep/etc
+end
+
+-- Assigns a pet to the "mob" parameter by adding "offset" to the mob's ID
+-- will bail out if the offset mob's name doesn't match "petName" parameter, as a sanity check for ID shifts or mobs that have multiple job types in the same zone
+---@param mob CBaseEntity
+---@param offset number
+---@param petName string
+---@return nil
+xi.pet.setMobPet = function(mob, offset, petName)
+    if not mob or mob:getObjType() ~= xi.objType.MOB then
+        return
+    end
+
+    local pet = GetMobByID(mob:getID() + offset)
+    if not pet or pet:getName() ~= petName then
+        return
+    end
+
+    if pet:getMaster() or mob:getPet() then
+        return
+    end
+
+    -- pet is always spawned by master
+    DisallowRespawn(pet:getID(), true)
+    if not mob:isSpawned() and pet:isSpawned() then
+        DespawnMob(pet:getID(), 2)
+    end
+
+    -- link mob and pet for things like call_beast, summon elemental, etc
+    mob:setPet(pet)
 end

@@ -18,11 +18,6 @@ local CSimulation = {}
 function CSimulation:spawnPlayer(params)
 end
 
----@param zoneIds ...integer?
----@return nil
-function CSimulation:loadZone(zoneIds)
-end
-
 ---@param ... xi.tick? Task boundary types to advance to. Defaults to xi.tick.ZONE if none provided.
 ---@return nil
 function CSimulation:tick(...)
@@ -70,4 +65,11 @@ end
 ---Skip to midnight (00:00) of the next Vana'diel day
 ---@return nil
 function CSimulation:skipToNextVanaDay()
+end
+
+---Returns mobs in a spawn slot as a table
+---@param zoneId xi.zone
+---@param slotId integer
+---@return CTestEntity[]
+function CSimulation:getSpawnSlot(zoneId, slotId)
 end

@@ -504,8 +504,8 @@ xi.darkixion.onMobWeaponSkill = function(target, mob, skill)
     mob:queue(0, function(mobArg)
         if not xi.combat.behavior.isEntityBusy(mobArg) then
             mobArg:setBehavior(0)
-            mob:setAutoAttackEnabled(true)
-            mob:setMobAbilityEnabled(true)
+            mobArg:setAutoAttackEnabled(true)
+            mobArg:setMobAbilityEnabled(true)
         end
     end)
 end
@@ -513,12 +513,14 @@ end
 xi.darkixion.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.GRAVITY)
     mob:addImmunity(xi.immunity.BIND)
-    mob:addImmunity(xi.immunity.SILENCE)
     mob:addImmunity(xi.immunity.LIGHT_SLEEP)
     mob:addImmunity(xi.immunity.DARK_SLEEP)
     mob:addImmunity(xi.immunity.PETRIFY)
+    mob:addImmunity(xi.immunity.STUN)
+    mob:addImmunity(xi.immunity.TERROR)
 
     mob:setMobMod(xi.mobMod.NO_REST, 10)
+    mob:setMobMod(xi.mobMod.AOE_HIT_ALL, 1)
 end
 
 -- either turn in a random direction, or turn away from skillTarget to use acheron kick
@@ -565,6 +567,7 @@ xi.darkixion.onMobSpawn = function(mob)
     SetServerVariable('DarkIxion_PopTime', GetSystemTime())
 
     mob:setAggressive(true)
+    mob:setRoamFlags(bit.bor(mob:getRoamFlags(), xi.roamFlag.SCRIPTED)) -- do not roam around, only path during roam via patrol path
 
     -- pre-mobskill listeners to turn mob as appropriate
     mob:addListener('WEAPONSKILL_STATE_ENTER', 'IXION_WS_STATE_ENTER', function(mobArg, skillId)
@@ -586,11 +589,13 @@ xi.darkixion.onMobRoam = function(mob)
     end
 
     if not mob:isFollowingPath() then
-        -- Ensures he always cleanly paths (doesn't clip through terrain)
         local pathList = xi.darkixion.zoneinfo[mob:getZoneID()].pathList
-        if not mob:atPoint(pathList[1].x, pathList[1].y, pathList[1].z) then
+        if mob:checkDistance(pathList[1]) > 50 then
+            -- not patrolling and is very far from first point in list, path back
+            -- This ensures he always cleanly paths when roaming (doesn't clip through terrain)
             mob:pathTo(pathList[1].x, pathList[1].y, pathList[1].z, xi.path.flag.RUN)
         else
+            -- patrol list persists through combat so if a wipe happens, Ixion will resume pathing when doing the runaway mechanic
             mob:pathThrough(pathList, bit.bor(xi.path.flag.RUN, xi.path.flag.PATROL))
         end
     end
@@ -684,9 +689,8 @@ end
 -- Used by Trample mechanics
 local getEnemiesInRange = function(mob, distance)
     local targetTypeFlag = xi.targetType.SELF + xi.targetType.ANY_ALLEGIANCE -- self + any_allegiance is the targetfind code for "target myself, and find any enemies in range"
-    local findFlags = xi.findFlag.HIT_ALL -- target doesn't need to be on enmity list
     local aoeCenter = xi.aoeRadius.ATTACKER
-    local enemies = mob:getEntitiesInRange(mob, xi.aoeType.ROUND, aoeCenter, distance, findFlags, targetTypeFlag)
+    local enemies = mob:getEntitiesInRange(mob, xi.aoeType.ROUND, aoeCenter, distance, 0, targetTypeFlag)
 
     return enemies
 end

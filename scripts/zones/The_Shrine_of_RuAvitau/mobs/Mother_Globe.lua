@@ -154,7 +154,7 @@ local setupTrainFollowing = function(mob)
         local currentSlave = GetMobByID(slaveGlobeID)
         if currentSlave and currentSlave:isAlive() then
             local action = currentSlave:getCurrentAction()
-            if action ~= xi.act.NONE and action ~= xi.act.DEATH then
+            if action ~= xi.action.category.NONE and action ~= xi.action.category.DEATH then
                 currentSlave:follow(followTarget, xi.followType.ROAM)
                 followTarget = currentSlave
             end
@@ -236,14 +236,23 @@ entity.onMobRoam = function(mob)
 end
 
 entity.onAdditionalEffect = function(mob, target, damage)
-    return xi.mob.onAddEffect(mob, target, damage, xi.mob.ae.ENTHUNDER, { damage = 110 })
+    local pTable =
+    {
+        chance         = 100,
+        attackType     = xi.attackType.MAGICAL,
+        magicalElement = xi.element.THUNDER,
+        basePower      = math.floor(damage / 2),
+        actorStat      = xi.mod.INT,
+    }
+
+    return xi.combat.action.executeAddEffectDamage(mob, target, pTable)
 end
 
 entity.onMobFight = function(mob, target)
     -- Keep pets linked
     for _, slaveGlobeID in ipairs(slaveGlobes) do
         local pet = GetMobByID(slaveGlobeID)
-        if pet and pet:getCurrentAction() == xi.act.ROAMING then
+        if pet and pet:getCurrentAction() == xi.action.category.ROAMING then
             pet:updateEnmity(target)
         end
     end

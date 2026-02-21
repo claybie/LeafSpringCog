@@ -122,9 +122,9 @@ local pTable =
     [xi.magic.spell.GAIN_CHR     ] = { 1, xi.effect.CHR_BOOST,      1,    5,  300, true,  false, 0 },
 
     -- Haste
-    [xi.magic.spell.HASTE        ] = { 1, xi.effect.HASTE,         40, 1465,  180, true,  false, 0 },
-    [xi.magic.spell.HASTE_II     ] = { 2, xi.effect.HASTE,         96, 2998,  180, true,  false, 0 },
-    [xi.magic.spell.HASTEGA      ] = { 1, xi.effect.HASTE,         48, 1494,  180, false, false, 0 },
+    [xi.magic.spell.HASTE        ] = { 5, xi.effect.HASTE,         40, 1465,  180, true,  false, 0 },
+    [xi.magic.spell.HASTE_II     ] = { 6, xi.effect.HASTE,         96, 2998,  180, true,  false, 0 },
+    [xi.magic.spell.HASTEGA      ] = { 5, xi.effect.HASTE,         48, 1494,  180, false, false, 0 },
     -- [xi.magic.spell.HASTEGA_II   ] = { 2, xi.effect.HASTE,         99, 2998,  180, false, false, 0 },
 
     -- Phalanx
@@ -560,6 +560,14 @@ xi.spells.enhancing.useEnhancingSpell = function(caster, target, spell)
                 target:delStatusEffect(effectValue)
             end
         end
+
+    -- Invisible
+    elseif spellEffect == xi.effect.INVISIBLE then
+        -- Invisible does not overwrite Hide/Camouflage
+        if target:hasStatusEffectByFlag(xi.effectFlag.INVISIBLE) then
+            spell:setMsg(xi.msg.basic.MAGIC_NO_EFFECT)
+            return 0
+        end
     end
 
     --------------------------------------------------
@@ -591,6 +599,7 @@ xi.spells.enhancing.useEnhancingSpell = function(caster, target, spell)
             spell:setMsg(xi.msg.basic.MAGIC_GAIN_EFFECT)
         else
             spell:setMsg(xi.msg.basic.MAGIC_NO_EFFECT) -- No effect.
+            return xi.effect.NONE
         end
     end
 

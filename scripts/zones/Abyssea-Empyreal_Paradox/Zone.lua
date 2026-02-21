@@ -15,10 +15,16 @@ zoneObject.onZoneIn = function(player, prevZone)
         player:getYPos() == 0 and
         player:getZPos() == 0
     then
-        player:setPos(540, -500, -565, 64)
+        player:setPos(540, -500, -571, 64)
     end
 
     return cs
+end
+
+zoneObject.afterZoneIn = function(player)
+    if not player:hasStatusEffect(xi.effect.VISITANT) then
+        player:addStatusEffectEx(xi.effect.VISITANT, xi.effect.VISITANT, 0, 0, 0)
+    end
 end
 
 zoneObject.onTriggerAreaEnter = function(player, triggerArea)

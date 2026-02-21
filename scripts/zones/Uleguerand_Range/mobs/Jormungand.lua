@@ -68,7 +68,17 @@ local function enterFlight(mob)
 end
 
 entity.onMobInitialize = function(mob)
+    mob:addImmunity(xi.immunity.BIND)
+    mob:addImmunity(xi.immunity.LIGHT_SLEEP)
+    mob:addImmunity(xi.immunity.PARALYZE)
+    mob:addImmunity(xi.immunity.SILENCE)
+    mob:addImmunity(xi.immunity.PETRIFY)
+    mob:addImmunity(xi.immunity.PLAGUE)
+    mob:addImmunity(xi.immunity.GRAVITY)
+    mob:addImmunity(xi.immunity.TERROR)
+
     mob:setCarefulPathing(true)
+    mob:setMobMod(xi.mobMod.AOE_HIT_ALL, 1)
 
     xi.mob.updateNMSpawnPoint(mob)
     mob:setRespawnTime(math.random(144, 240) * 1800) -- 3 to 5 days in 30 minute windows
@@ -99,18 +109,6 @@ entity.onMobSpawn = function(mob)
     mob:setMobMod(xi.mobMod.ROAM_DISTANCE, 5)
     mob:setMobMod(xi.mobMod.WEAPON_BONUS, 158) -- 255 total weapon damage
     mob:setBehavior(bit.bor(mob:getBehavior(), xi.behavior.NO_TURN))
-    mob:addImmunity(xi.immunity.BIND)
-    mob:addImmunity(xi.immunity.LIGHT_SLEEP)
-    mob:addImmunity(xi.immunity.PARALYZE)
-    mob:addImmunity(xi.immunity.SILENCE)
-    mob:addImmunity(xi.immunity.PETRIFY)
-    mob:addImmunity(xi.immunity.PLAGUE)
-    mob:addImmunity(xi.immunity.GRAVITY)
-    mob:addImmunity(xi.immunity.TERROR)
-end
-
-entity.onMobRoam = function(mob)
-    mob:setMobMod(xi.mobMod.NO_MOVE, 0)
 end
 
 entity.onMobEngage = function(mob, target)
@@ -204,7 +202,7 @@ entity.onMobFight = function(mob, target)
     end
 end
 
-entity.onMobWeaponSkillPrepare = function(mob, target)
+entity.onMobMobskillChoose = function(mob, target, skillId)
     if mob:getAnimationSub() == 1 then
         mob:setLocalVar('skill_tp', mob:getTP())
     end
@@ -243,7 +241,16 @@ entity.onMobWeaponSkill = function(target, mob, skill)
 end
 
 entity.onAdditionalEffect = function(mob, target, damage)
-    return xi.mob.onAddEffect(mob, target, damage, xi.mob.ae.ENBLIZZARD, { chance = 20, power = 100 })
+    local pTable =
+    {
+        chance         = 20,
+        attackType     = xi.attackType.MAGICAL,
+        magicalElement = xi.element.ICE,
+        basePower      = math.floor(damage / 2),
+        actorStat      = xi.mod.INT,
+    }
+
+    return xi.combat.action.executeAddEffectDamage(mob, target, pTable)
 end
 
 entity.onMobDisengage = function(mob)
@@ -257,10 +264,14 @@ entity.onMobDisengage = function(mob)
         mob:setMobSkillAttack(0)
         mob:setLocalVar('changeHP', 0)
     end
+
+    mob:setMobMod(xi.mobMod.NO_MOVE, 0)
 end
 
 entity.onMobDeath = function(mob, player, optParams)
-    player:addTitle(xi.title.WORLD_SERPENT_SLAYER)
+    if player then
+        player:addTitle(xi.title.WORLD_SERPENT_SLAYER)
+    end
 end
 
 entity.onMobDespawn = function(mob)

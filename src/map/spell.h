@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -26,6 +26,9 @@
 
 #define CANNOT_USE_SPELL 0
 
+enum class ActionAnimation : uint16_t;
+enum class ActionModifier : uint32_t;
+enum class FourCC : uint32_t;
 enum SPELLGROUP
 {
     SPELLGROUP_NONE      = 0,
@@ -224,8 +227,8 @@ enum SPELLAOE
 
 enum SPELLFLAG
 {
-    SPELLFLAG_NONE           = 0x00,
-    SPELLFLAG_HIT_ALL        = 0x01, // Hit all targets in range regardless of party
+    SPELLFLAG_NONE = 0x00,
+    // 0x01 is available
     SPELLFLAG_WIPE_SHADOWS   = 0x02, // Wipe shadows even if single target and miss/resist (example: "Maiden's Virelai")
     SPELLFLAG_IGNORE_SHADOWS = 0x04, // Ignore shadows and hit player anyways (example: Mobs "Death" spell)
     SPELLFLAG_NO_START_MSG   = 0x08, // Doesn't emit "<caster> starts casting <spell>"
@@ -1057,9 +1060,9 @@ public:
     timer::duration    getCastTime() const;
     timer::duration    getRecastTime() const;
     uint16             getValidTarget() const;
-    uint16             getAnimationID() const;
+    auto               getAnimationID() const -> ActionAnimation;
     timer::duration    getAnimationTime() const;
-    SPELLGROUP         getSpellGroup();
+    auto               getSpellGroup() const -> SPELLGROUP;
     SPELLFAMILY        getSpellFamily();
     uint8              getSkillType() const;
     uint16             getZoneMisc() const;
@@ -1067,20 +1070,19 @@ public:
     uint16             getBase() const;
     uint16             getElement() const;
     float              getMultiplier() const;
-    uint16             getMessage() const;
-    uint16             getDefaultMessage();
-    uint16             getMagicBurstMessage() const;
+    auto               getMessage() const -> MsgBasic;
+    auto               getMagicBurstMessage() const -> MsgBasic;
     int32              getCE() const;
     int32              getVE() const;
     timer::duration    getModifiedRecast() const;
     float              getRadius() const;
-    uint16             getAoEMessage() const; // returns the single target message for AoE moves
     uint8              getRequirements() const;
     uint16             getMeritId() const;
     uint8              getFlag() const;
     const std::string& getContentTag();
     float              getRange() const;
     uint32             getPrimaryTargetID() const;
+    auto               getFourCC(bool interrupt = false) const -> FourCC;
     bool               tookEffect() const; // returns true if the spell landed, not resisted or missed
     bool               hasMPCost();        // checks if spell costs mp to use
     bool               isHeal();           // is a heal spell
@@ -1108,10 +1110,10 @@ public:
     void setBase(uint16 base);
     void setElement(uint16 element);
     void setMultiplier(float multiplier);
-    void setMessage(uint16 message);
-    void setMagicBurstMessage(uint16 message);
-    auto getModifier() -> MODIFIER;
-    void setModifier(MODIFIER modifier); // set Spell modifier message, MUST reset the modifier on use otherwise it will be stale
+    void setMessage(MsgBasic message);
+    void setMagicBurstMessage(MsgBasic message);
+    auto getModifier() const -> ActionModifier;
+    void setModifier(ActionModifier modifier); // set Spell modifier message, MUST reset the modifier on use otherwise it will be stale
     void setPrimaryTargetID(uint32);
 
     void setCE(int32 ce);
@@ -1151,9 +1153,9 @@ private:
     uint16                         m_base{};                          // spell base damage
     float                          m_multiplier{};                    // multiplier for upper tier spells
     uint16                         m_element{};                       // element of spell
-    uint16                         m_message{};                       // message id
-    uint16                         m_MagicBurstMessage{};             // Message used for magic bursts.
-    MODIFIER                       m_MessageModifier{};               // Message modifier, "Cover!", "Resist!" or "Immunobreak!"
+    MsgBasic                       m_message{};                       // message id
+    MsgBasic                       m_MagicBurstMessage{};             // Message used for magic bursts.
+    ActionModifier                 m_MessageModifier{};               // Message modifier, "Cover!", "Resist!" or "Immunobreak!"
     int32                          m_CE{};                            // cumulative enmity of spell
     int32                          m_VE{};                            // volatile enmity of spell
     std::string                    m_name;                            // spell name
@@ -1167,12 +1169,13 @@ private:
 // Namespace to work with spells
 namespace spell
 {
-    void LoadSpellList();
 
-    CSpell* GetSpellByMonsterSkillId(uint16 SkillID);
-    CSpell* GetSpell(SpellID SpellID);
-    bool    CanUseSpell(CBattleEntity* PCaster, SpellID SpellID);
-    bool    CanUseSpell(CBattleEntity* PCaster, CSpell* PSpell);
-    bool    CanUseSpellWith(SpellID spellId, JOBTYPE job, uint8 level);
-    float   GetSpellRadius(CSpell* spellId, CBattleEntity* PCaster);
+void LoadSpellList();
+
+CSpell* GetSpellByMonsterSkillId(uint16 SkillID);
+CSpell* GetSpell(SpellID SpellID);
+bool    CanUseSpell(CBattleEntity* PCaster, SpellID SpellID);
+bool    CanUseSpell(CBattleEntity* PCaster, CSpell* PSpell);
+bool    CanUseSpellWith(SpellID spellId, JOBTYPE job, uint8 level);
+
 }; // namespace spell

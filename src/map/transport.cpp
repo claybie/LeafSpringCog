@@ -29,7 +29,6 @@
 
 #include "entities/charentity.h"
 #include "packets/entity_update.h"
-#include "packets/event.h"
 #include "utils/zoneutils.h"
 #include "zone.h"
 
@@ -139,7 +138,9 @@ void CTransportHandler::InitializeTransport(IPP mapIPP)
                                  "FROM transport "
                                  "LEFT JOIN zone_settings ON ((transport >> 12) & 0xFFF) = zoneid "
                                  "WHERE IF(? <> 0, ? = zoneip AND ? = zoneport, TRUE)",
-                                 mapIPP.getIP(), mapIPP.getIPString(), mapIPP.getPort());
+                                 mapIPP.getIP(),
+                                 mapIPP.getIPString(),
+                                 mapIPP.getPort());
     FOR_DB_MULTIPLE_RESULTS(rset)
     {
         TransportZone_Town zoneTown;
@@ -206,7 +207,9 @@ void CTransportHandler::InitializeTransport(IPP mapIPP)
                             "FROM transport LEFT JOIN "
                             "zone_settings ON zone = zoneid WHERE "
                             "IF(? <> 0, ? = zoneip AND ? = zoneport, TRUE)",
-                            mapIPP.getIP(), mapIPP.getIPString(), mapIPP.getPort());
+                            mapIPP.getIP(),
+                            mapIPP.getIPString(),
+                            mapIPP.getPort());
     FOR_DB_MULTIPLE_RESULTS(rset)
     {
         TransportZone_Voyage voyageZone{};
@@ -443,6 +446,13 @@ Elevator_t* CTransportHandler::getElevator(uint8 elevatorID)
 
 void CTransportHandler::insertElevator(Elevator_t elevator)
 {
+    // Double check that the NPC entities all exist
+    if (!elevator.LowerDoor || !elevator.UpperDoor || !elevator.Elevator)
+    {
+        ShowError("Elevator could not load NPC entity. Ignoring this elevator.");
+        return;
+    }
+
     // check to see if this elevator already exists
     for (auto& i : ElevatorList)
     {
@@ -453,13 +463,6 @@ void CTransportHandler::insertElevator(Elevator_t elevator)
             ShowError("Elevator already exists.");
             return;
         }
-    }
-
-    // Double check that the NPC entities all exist
-    if (elevator.LowerDoor == nullptr || elevator.UpperDoor == nullptr || elevator.Elevator == nullptr)
-    {
-        ShowError("Elevator %d could not load NPC entity. Ignoring this elevator.", elevator.Elevator->id);
-        return;
     }
 
     // Have permanent elevators wait until their next cycle to begin moving

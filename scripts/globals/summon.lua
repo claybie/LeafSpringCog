@@ -101,67 +101,50 @@ xi.summon.getSummoningSkillOverCap = function(avatar)
     return math.max(summoningSkill - maxSkill, 0)
 end
 
+---@param avatar CBaseEntity
+---@param target CBaseEntity
+---@param skill CPetSkill|CMobSkill
+---@param numberofhits number
+---@param accmod number
+---@param dmgmod number
+---@param dmgmodsubsequent number
+---@param tpeffect xi.mobskills.magicalTpBonus|xi.mobskills.physicalTpBonus
+---@param mtp100 number
+---@param mtp200 number
+---@param mtp300 number
+---@return physicalMobSkillRetVal
 xi.summon.avatarPhysicalMove = function(avatar, target, skill, numberofhits, accmod, dmgmod, dmgmodsubsequent, tpeffect, mtp100, mtp200, mtp300)
     local returninfo = {}
 
     -- I have never read a limit on accuracy bonus from summoning skill which can currently go far past 200 over cap
     -- current retail is over +250 skill so I am removing the cap, my SMN is at 695 total skill
-    local acc = avatar:getACC() + xi.summon.getSummoningSkillOverCap(avatar)
-    local eva = target:getEVA()
+    local bonusAcc =  xi.summon.getSummoningSkillOverCap(avatar)
 
-    -- Handle double/triple attack
-    local bonusHits    = 0
-    local doubleRate   = avatar:getMod(xi.mod.DOUBLE_ATTACK)
-    local tripleRate   = avatar:getMod(xi.mod.TRIPLE_ATTACK)
-    if math.random(1, 100) <= tripleRate then
+    -- Handle DA/TA/QA
+    -- TODO: handle Nirvana
+    local bonusHits  = 0
+    local doubleRate = avatar:getMod(xi.mod.DOUBLE_ATTACK)
+    local tripleRate = avatar:getMod(xi.mod.TRIPLE_ATTACK)
+    local quadRate   = avatar:getMod(xi.mod.QUAD_ATTACK)
+
+    if math.random(1, 100) <= quadRate then
+        bonusHits = bonusHits + 3
+    elseif math.random(1, 100) <= tripleRate then
         bonusHits = bonusHits + 2
     elseif math.random(1, 100) <= doubleRate then
         bonusHits = bonusHits + 1
     end
 
-    -- Level correction does not happen in Adoulin zones, Legion, or zones in Escha/Reisenjima
-    -- https://www.bg-wiki.com/bg/PDIF#Level_Correction_Function_.28cRatio.29
-    local shouldApplyLevelCorrection = xi.data.levelCorrection.isLevelCorrectedZone(avatar)
-
-    -- https://forum.square-enix.com/ffxi/threads/45365?p=534537#post534537
-    -- https://www.bg-wiki.com/bg/Hit_Rate
-    -- https://www.bluegartr.com/threads/114636-Monster-Avatar-Pet-damage
-    -- As of December 10th 2015 pet hit rate caps at 99% (familiars, wyverns, avatars and automatons)
-    -- increased from 95%
-    local maxHitRate = 0.99
-    local minHitRate = 0.2
-
-    -- Hit Rate (%) = 75 + floor( (Accuracy - Evasion)/2 ) + 2*(dLVL)
-    -- For Avatars negative penalties for level correction seem to be ignored for attack and likely for accuracy,
-    -- bonuses cap at level diff of 38 based on this testing:
-    -- https://www.bluegartr.com/threads/114636-Monster-Avatar-Pet-damage
-    -- If there are penalties they seem to be applied differently similarly to monsters.
-    local levelDiff         = math.min(avatar:getMainLvl() - target:getMainLvl(), 38) -- Max level diff is 38
-    local levelCorrection   = 0
-
-    -- Only bonuses are applied for avatar level correction
-    if shouldApplyLevelCorrection then
-        if levelDiff > 0 then
-            levelCorrection = math.max(levelDiff * 2, 0)
-        end
-    end
-
-    -- Delta acc / 2 for hit rate
-    local dAcc = math.floor((acc - eva) / 2)
-
     -- Normal hits computed first
-    local hitrateSubsequent = 75 + dAcc + levelCorrection
-    local hitrateFirst      = hitrateSubsequent + 50 -- First hit gets a +100 ACC bonus which translates to +50 hit
-    hitrateSubsequent       = hitrateSubsequent / 100
-    hitrateFirst            = hitrateFirst / 100
-    hitrateSubsequent       = utils.clamp(hitrateSubsequent, minHitRate, maxHitRate)
-    hitrateFirst            = utils.clamp(hitrateFirst, minHitRate, maxHitRate)
+    local hitrateFirst      = xi.combat.physicalHitRate.getPhysicalHitRate(avatar, target, bonusAcc + 100, xi.attackAnimation.RIGHT_ATTACK, false)
+    local hitrateSubsequent = xi.combat.physicalHitRate.getPhysicalHitRate(avatar, target, bonusAcc, xi.attackAnimation.RIGHT_ATTACK, false)
 
     -- Compute hits first so we can exit early
     local firstHitLanded   = false
     local numHitsLanded    = 0
     local numHitsProcessed = 1
     local finaldmg         = 0
+    local didCrit          = false
 
     if math.random() < hitrateFirst then
         firstHitLanded = true
@@ -200,6 +183,9 @@ xi.summon.avatarPhysicalMove = function(avatar, target, skill, numberofhits, acc
         local ratio  = avatar:getStat(xi.mod.ATT) / target:getStat(xi.mod.DEF)
         local cRatio = ratio
 
+        local shouldApplyLevelCorrection = xi.data.levelCorrection.isLevelCorrectedZone(avatar)
+        local levelDiff                  = math.min(avatar:getMainLvl() - target:getMainLvl(), 38) -- Max level diff is 38
+
         if shouldApplyLevelCorrection then
             -- Mobs, Avatars and pets only get bonuses, no penalties (or they are calculated differently)
             if levelDiff > 0 then
@@ -218,7 +204,8 @@ xi.summon.avatarPhysicalMove = function(avatar, target, skill, numberofhits, acc
             local wRatio = cRatio
             local isCrit = math.random() < critRate
             if isCrit then
-                wRatio = wRatio + 1
+                wRatio  = wRatio + 1
+                didCrit = true
             end
 
             local qRatio = getRandRatio(wRatio)                  -- Get a random ratio from min and max
@@ -236,7 +223,8 @@ xi.summon.avatarPhysicalMove = function(avatar, target, skill, numberofhits, acc
             local wRatio = cRatio
             local isCrit = math.random() < critRate
             if isCrit then
-                wRatio = wRatio + 1
+                wRatio  = wRatio + 1
+                didCrit = true
             end
 
             local qRatio = getRandRatio(wRatio)                  -- Get a random ratio from min and max.
@@ -256,8 +244,11 @@ xi.summon.avatarPhysicalMove = function(avatar, target, skill, numberofhits, acc
         end
     end
 
-    returninfo.dmg        = finaldmg
+    returninfo.damage     = finaldmg
     returninfo.hitslanded = numHitsLanded
+
+    skill:setAttackType(xi.attackType.PHYSICAL)
+    skill:setCritical(didCrit)
 
     return returninfo
 end
@@ -269,11 +260,21 @@ local attackTypeShields =
     [xi.attackType.MAGICAL ] = xi.effect.MAGIC_SHIELD,
 }
 
-xi.summon.avatarFinalAdjustments = function(dmg, mob, skill, target, skilltype, damagetype, shadowbehav)
+---@param info magicalMobSkillRetVal|physicalMobSkillRetVal
+---@param mob CBaseEntity
+---@param skill CPetSkill|CMobSkill
+---@param target CBaseEntity
+---@param skilltype xi.attackType
+---@param damagetype xi.damageType
+---@param shadowbehav xi.mobskills.shadowBehavior?
+---@return number
+xi.summon.avatarFinalAdjustments = function(info, mob, skill, target, skilltype, damagetype, shadowbehav)
     local missMessage = xi.msg.basic.SKILL_MISS
-    if mob:getCurrentAction() == xi.action.PET_MOBABILITY_FINISH then
+    if mob:getCurrentAction() == xi.action.category.PET_MOBABILITY_FINISH then
         missMessage = xi.msg.basic.JA_MISS_2
     end
+
+    local dmg = info.damage
 
     -- Physical Attack Missed
     if
@@ -287,7 +288,7 @@ xi.summon.avatarFinalAdjustments = function(dmg, mob, skill, target, skilltype, 
 
     -- set message to damage
     -- this is for AoE because its only set once
-    if mob:getCurrentAction() == xi.action.PET_MOBABILITY_FINISH then
+    if mob:getCurrentAction() == xi.action.category.PET_MOBABILITY_FINISH then
         if skill:getMsg() ~= xi.msg.basic.JA_MAGIC_BURST then
             skill:setMsg(xi.msg.basic.USES_JA_TAKE_DAMAGE)
         end
@@ -296,7 +297,14 @@ xi.summon.avatarFinalAdjustments = function(dmg, mob, skill, target, skilltype, 
     end
 
     -- Handle shadows depending on shadow behavior / skilltype
-    dmg = utils.takeShadows(target, dmg, shadowbehav)
+    local preShadowDmg = dmg
+    local shadowsUsed  = 0
+    dmg, shadowsUsed = utils.takeShadows(target, dmg, shadowbehav)
+
+    if preShadowDmg > 0 and dmg == 0 then
+        skill:setMsg(xi.msg.basic.SHADOW_ABSORB)
+        return shadowsUsed
+    end
 
     -- handle Third Eye using shadowbehav as a guide
     local teye = target:getStatusEffect(xi.effect.THIRD_EYE)
@@ -365,16 +373,11 @@ xi.summon.avatarFinalAdjustments = function(dmg, mob, skill, target, skilltype, 
 
     -- handle One For All, Liement
     if skilltype == xi.attackType.MAGICAL then
-        dmg = utils.oneforall(target, dmg)
+        dmg = utils.handleOneForAll(target, dmg)
     end
 
-    -- Handle Phalanx
-    if dmg > 0 then
-        dmg = utils.clamp(dmg - target:getMod(xi.mod.PHALANX), 0, 99999)
-    end
-
-    -- handling stoneskin
-    dmg = utils.stoneskin(target, dmg)
+    dmg = utils.handlePhalanx(target, dmg)
+    dmg = utils.handleStoneskin(target, dmg)
 
     -- Check if the mob has a damage cap
     dmg = target:checkDamageCap(dmg)

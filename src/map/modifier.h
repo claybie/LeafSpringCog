@@ -78,6 +78,7 @@ enum class Mod
     LIGHT_SLEEP_RES_RANK = 1165,
     DARK_SLEEP_RES_RANK  = 1166,
     BLIND_RES_RANK       = 1167,
+    STUN_RES_RANK        = 1186,
 
     ATT  = 23, // Attack
     RATT = 24, // Ranged Attack
@@ -263,6 +264,14 @@ enum class Mod
     LIGHT_ABSORB      = 465, // Occasionally absorbs light elemental damage.
     DARK_ABSORB       = 466, // Occasionally absorbs dark elemental damage.
 
+    // Action-type power multipliers
+    POWER_MULTIPLIER_BASIC_ATTACK = 1173, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+    POWER_MULTIPLIER_BASIC_RANGED = 1174, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+    POWER_MULTIPLIER_SPELL        = 1175, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+    POWER_MULTIPLIER_WEAPONSKILL  = 1176, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+    POWER_MULTIPLIER_JOB_ABILITY  = 1177, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+    POWER_MULTIPLIER_MOBSKILL     = 1178, // Base 100. Multiplies the power/damage of the action like so: power * (1 + mod / 100)
+
     // Crit Damage / Delay
     CRITHITRATE              = 165,  // Raises chance to crit
     CRITHITRATE_ONLY_WEP     = 141,  // Raises chance to crit (but only for attacks with the specific weapon that has the mod)
@@ -288,6 +297,7 @@ enum class Mod
     SPELLINTERRUPT        = 168, // % Spell Interruption Rate
 
     // Movement speed modifiers in use order.
+    // See CBattleEntity::UpdateSpeed
     MOUNT_MOVE                = 972,  // % Mount Movement Speed
     MOVE_SPEED_STACKABLE      = 75,   // Additive modifier. Applied before multipliers. Gear movement speed penalties.
     MOVE_SPEED_WEIGHT_PENALTY = 77,   // Multiplicative modifier. For Gravity and curse.
@@ -299,17 +309,20 @@ enum class Mod
     MOVE_SPEED_BOLTERS_ROLL   = 1086, // Additive modifier. Applied after multipliers.
     MOVE_SPEED_OVERRIDE       = 169,  // Modifier used to overide regular speed caps. (GM speed and Feast of Swords)
 
-    FASTCAST                = 170, // Increases Spell Cast Time (TRAIT)
-    UFASTCAST               = 407, // uncapped fast cast
-    CURE_CAST_TIME          = 519, // cure cast time reduction
-    ELEMENTAL_CELERITY      = 901, // Quickens Elemental Magic Casting
-    DELAY                   = 171, // Increase/Decrease Delay
-    RANGED_DELAY            = 172, // Increase/Decrease Ranged Delay
-    MARTIAL_ARTS            = 173, // The integer amount of delay to reduce from H2H weapons' base delay. (TRAIT)
-    SKILLCHAINBONUS         = 174, // Damage bonus applied to skill chain damage.  Modifier from effects/traits
-    SKILLCHAINDMG           = 175, // Damage bonus applied to skill chain damage.  Modifier from gear (multiplicative after effect/traits)
-    MAX_SWINGS              = 978, // Max swings for "Occasionally attacks X times"
-    ADDITIONAL_SWING_CHANCE = 979, // Chance that allows for an additional swing despite of multiple hits, mostly for Amood weapons
+    FASTCAST                = 170,  // Increases Spell Cast Time (TRAIT)
+    UFASTCAST               = 407,  // uncapped fast cast
+    CURE_CAST_TIME          = 519,  // cure cast time reduction
+    ELEMENTAL_CELERITY      = 901,  // Quickens Elemental Magic Casting
+    HEALING_MAGIC_RECAST    = 1183, // Recast delay (percent, usually negative)
+    ENFEEBLING_MAGIC_RECAST = 1184, // Recast delay (percent, usually negative)
+    ENHANCING_MAGIC_RECAST  = 1185, // Recast delay (percent, usually negative)
+    DELAY                   = 171,  // Increase/Decrease Delay
+    RANGED_DELAY            = 172,  // Increase/Decrease Ranged Delay
+    MARTIAL_ARTS            = 173,  // The integer amount of delay to reduce from H2H weapons' base delay. (TRAIT)
+    SKILLCHAINBONUS         = 174,  // Damage bonus applied to skill chain damage.  Modifier from effects/traits
+    SKILLCHAINDMG           = 175,  // Damage bonus applied to skill chain damage.  Modifier from gear (multiplicative after effect/traits)
+    MAX_SWINGS              = 978,  // Max swings for "Occasionally attacks X times"
+    ADDITIONAL_SWING_CHANCE = 979,  // Chance that allows for an additional swing despite of multiple hits, mostly for Amood weapons
 
     MAGIC_DAMAGE = 311, // Magic damage added directly to the spell's base damage
 
@@ -467,6 +480,7 @@ enum class Mod
     ENF_MAG_POTENCY   = 290,  // Increases Enfeebling magic potency %
     ENF_MAG_DURATION  = 1151, // Increases enfeebling magic duration %
     ENHANCES_SABOTEUR = 297,  // Increases Saboteur Potency %
+    PHALANX_RECEIVED  = 1182, // Phalanx +N when Phalanx is received (cast on self or from other player)
 
     // Thief
     FLEE_DURATION        = 93,   // Flee duration in seconds
@@ -585,29 +599,37 @@ enum class Mod
     TRUE_SHOT_EFFECT        = 1053, // TODO: True Shot Ranged Damage increase (percent)
     DEAD_AIM_EFFECT         = 1054, // TODO: Dead Aim Critical Damage increase (percent)
     BOUNTY_SHOT_TH_BONUS    = 826,  // Boosts base TH level of bounty shot
+    RETAIN_CAMOUFLAGE       = 1189, // Enables retaining Camouflage after using a ranged attack
+    RETAIN_UNLIMITED_SHOT   = 1190, // Unlimited Shot is retained if the ranged attack misses
+    RA_IGNORE_LVL_DIFF      = 1191, // Ranged attacks ignore pDIF level correction penalty
 
     // Samurai
-    WARDING_CIRCLE_DURATION   = 95,   // Warding Circle extended duration in seconds
-    WARDING_CIRCLE_POTENCY    = 1143, // Increases the potency of the Warding Circle effect (e.g. mod value 2 = +2% Demon Killer)
-    MEDITATE_DURATION         = 94,   // Meditate duration in seconds
-    ZANSHIN                   = 306,  // Zanshin percent chance
-    THIRD_EYE_COUNTER_RATE    = 508,  // Adds counter to 3rd eye anticipates & if using Seigan counter rate is increased by 15%
-    THIRD_EYE_ANTICIPATE_RATE = 839,  // Adds anticipate rate in percents
-    THIRD_EYE_BONUS           = 1055, // TODO: Bonus Third Eye Evasion (count)
-    SENGIKORI_SC_DMG_DEBUFF   = 1088, // % Increase to closing skillchain damage. Applied to defender.
-    SENGIKORI_MB_DMG_DEBUFF   = 1089, // % Increase to magic burst damage. Applied to defender.
-    SENGIKORI_BONUS           = 1090, // additive % increase to Sengikori
+    WARDING_CIRCLE_DURATION  = 95,   // Warding Circle extended duration in seconds
+    WARDING_CIRCLE_POTENCY   = 1143, // Increases the potency of the Warding Circle effect (e.g. mod value 2 = +2% Demon Killer)
+    MEDITATE_DURATION        = 94,   // Meditate duration in seconds
+    ZANSHIN                  = 306,  // Zanshin percent chance
+    THIRD_EYE_COUNTER_RATE   = 508,  // Adds counter to 3rd eye anticipates & if using Seigan counter rate is increased by 15%
+    THIRD_EYE_RETENTION_RATE = 839,  // Increases retention rate of third eye with Seigan. 50 = 50%
+    THIRD_EYE_BONUS          = 1055, // TODO: Bonus Third Eye Evasion (count)
+    SENGIKORI_SC_DMG_DEBUFF  = 1088, // % Increase to closing skillchain damage. Applied to defender.
+    SENGIKORI_MB_DMG_DEBUFF  = 1089, // % Increase to magic burst damage. Applied to defender.
+    SENGIKORI_BONUS          = 1090, // additive % increase to Sengikori
+    HASSO_ZANSHIN_BONUS      = 1187, // Enables Hasso to occasionally trigger Zanshin after landing normal attacks
+    SEIGAN_COUNTER_BONUS     = 1188, // Enables Seigan counter bonus based on Zanshin rate
 
     // Ninja
-    UTSUSEMI             = 307, // Everyone's favorite --tracks shadows.
-    UTSUSEMI_BONUS       = 900, // Extra shadows from gear
-    NINJA_TOOL           = 308, // Percent chance to not use a tool.
-    NIN_NUKE_BONUS_INNIN = 223, // Ninjutsu damage multiplier from Innin.
-    NIN_NUKE_BONUS_GEAR  = 522, // Ninjutsu damage multiplier from gear.
-    DAKEN                = 911, // chance to throw a shuriken without consuming it
-    NINJUTSU_DURATION    = 1000,
-    ENHANCES_SANGE       = 1091, // 1 = +1 attack for Daken during Sange per Sange merit (i.e. 20 with 5 merits = +100 attack during Sange)
-    ENHANCES_FUTAE       = 1148, // Adds to the +50% bonus damage to elemental ninjutsu provided by Futae (percent)
+    UTSUSEMI              = 307, // Everyone's favorite --tracks shadows.
+    UTSUSEMI_BONUS        = 900, // Extra shadows from gear
+    NINJA_TOOL            = 308, // Percent chance to not use a tool.
+    NIN_NUKE_BONUS_INNIN  = 223, // Ninjutsu damage multiplier from Innin.
+    NIN_NUKE_BONUS_GEAR   = 522, // Ninjutsu damage multiplier from gear.
+    DAKEN                 = 911, // chance to throw a shuriken without consuming it
+    NINJUTSU_DURATION     = 1000,
+    ENHANCES_SANGE        = 1091, // 1 = +1 attack for Daken during Sange per Sange merit (i.e. 20 with 5 merits = +100 attack during Sange)
+    ENHANCES_FUTAE        = 1148, // Adds to the +50% bonus damage to elemental ninjutsu provided by Futae (percent)
+    UTSUSEMI_AOE          = 1179, // "Utsusemi" effect extends to an area
+    YONIN_UTSUSEMI_ENMITY = 1192, // Enables extra enmity from Utsusemi spells while under Yonin
+    SANGE_MULTI_HIT       = 1193, // Sange uses shadow-based multi-hit ranged attack instead of Daken boost
 
     // Dragoon
     ANCIENT_CIRCLE_DURATION    = 859,  // Ancient Circle extended duration in seconds
@@ -631,11 +653,16 @@ enum class Mod
     ENHANCES_STRAFE            = 282,  // Strafe merit augment, +50 TP gained per merit level on breath use.
     ENHANCES_SPIRIT_LINK       = 281,  // Adds erase/-na to Spirit Link
 
-    // Summoner
-    AVATAR_PERPETUATION       = 371,  // stores base cost of current avatar
-    WEATHER_REDUCTION         = 372,  // stores perpetuation reduction depending on weather
-    DAY_REDUCTION             = 373,  // stores perpetuation reduction depending on day
-    PERPETUATION_REDUCTION    = 346,  // stores the MP/tick reduction from gear
+    // Summoner: Perpetuation costs.
+    AVATAR_PERPETUATION         = 371,  // stores base cost of current avatar
+    WEATHER_REDUCTION           = 372,  // stores perpetuation reduction depending on weather
+    DAY_REDUCTION               = 373,  // stores perpetuation reduction depending on day
+    PERPETUATION_REDUCTION      = 346,  // stores the MP/tick reduction from gear
+    HALF_PERPETUATION_CARBUNCLE = 356,  // if > 0, halves perpetuation cost if summon is Carbuncle (Carby Mitts, Asteria Mitts +1)
+    HALF_PERPETUATION_DAY       = 1170, // if > 0, halves perpetuation cost if summon matches day element (Caller's Bracers +1)
+    HALF_PERPETUATION_WEATHER   = 1171, // if > 0, halves perpetuation cost if summon matches weather element (Beckoner's Bracers)
+
+    // Summoner: Others.
     BP_DELAY                  = 357,  // stores blood pact delay reduction
     ENHANCES_ELEMENTAL_SIPHON = 540,  // Bonus Base MP added to Elemental Siphon skill.
     BP_DELAY_II               = 541,  // Blood Pact Delay Reduction II
@@ -836,8 +863,7 @@ enum class Mod
     DARK_AFFINITY_PERP    = 560,
 
     // Special Modifier+
-    ADDS_WEAPONSKILL     = 355, //
-    ADDS_WEAPONSKILL_DYN = 356, // In Dynamis
+    ADDS_WEAPONSKILL = 355, //
 
     STEALTH            = 358, //
     SNEAK_DURATION     = 946, // Additional duration in seconds
@@ -890,17 +916,19 @@ enum class Mod
 
     ABSORB_DMG_TO_MP = 516, // Unlike PLD gear mod, works on all damage types (Ethereal Earring)
 
-    ITEM_ADDEFFECT_LVADJUST = 278, // level correction factor to use, if any
-    ITEM_ADDEFFECT_PLACEHLD = 279, // placeholder, want to keep these together and 99% sure we'll use this
-    ITEM_ADDEFFECT_DSTAT    = 280, // value = attacker modifier to use as bonus dmg (mnd, int, etc)
-    ITEM_ADDEFFECT_TYPE     = 431, // see procType table in scripts\globals\additional_effects.lua
-    ITEM_SUBEFFECT          = 499, // Animation ID of Spikes and Additional Effects
-    ITEM_ADDEFFECT_DMG      = 500, // Damage of an items Additional Effect or Spikes
-    ITEM_ADDEFFECT_CHANCE   = 501, // Chance of an items Additional Effect or Spikes
-    ITEM_ADDEFFECT_ELEMENT  = 950, // Element of the Additional Effect or Spikes, for resist purposes
-    ITEM_ADDEFFECT_STATUS   = 951, // Status Effect ID to try to apply via Additional Effect or Spikes
-    ITEM_ADDEFFECT_POWER    = 952, // Base Power for effect in MOD_ITEM_ADDEFFECT_STATUS. Must be used for debuffs/buffs.
-    ITEM_ADDEFFECT_DURATION = 953, // Base Duration for effect in MOD_ITEM_ADDEFFECT_STATUS
+    ITEM_ADDEFFECT_LVADJUST = 278,  // level correction factor to use, if any
+    ITEM_ADDEFFECT_PLACEHLD = 279,  // placeholder, want to keep these together and 99% sure we'll use this
+    ITEM_ADDEFFECT_DSTAT    = 280,  // value = attacker modifier to use as bonus dmg (mnd, int, etc)
+    ITEM_ADDEFFECT_TYPE     = 431,  // see procType table in scripts\globals\additional_effects.lua
+    ITEM_SUBEFFECT          = 499,  // Animation ID of Spikes and Additional Effects
+    ITEM_ADDEFFECT_DMG      = 500,  // Damage of an items Additional Effect or Spikes
+    ITEM_ADDEFFECT_CHANCE   = 501,  // Chance of an items Additional Effect or Spikes
+    ITEM_ADDEFFECT_ELEMENT  = 950,  // Element of the Additional Effect or Spikes, for resist purposes
+    ITEM_ADDEFFECT_STATUS   = 951,  // Status Effect ID to try to apply via Additional Effect or Spikes
+    ITEM_ADDEFFECT_POWER    = 952,  // Base Power for effect in MOD_ITEM_ADDEFFECT_STATUS. Must be used for debuffs/buffs.
+    ITEM_ADDEFFECT_DURATION = 953,  // Base Duration for effect in MOD_ITEM_ADDEFFECT_STATUS
+    ITEM_ADDEFFECT_PRIORITY = 1180, // Set to 1 to check add effect anyway even if enspells etc have already occured
+    ITEM_ADDEFFECT_SCRIPTED = 1181, // Set to 1 to run item script directly instead of through scripts\globals\additional_effects.lua
 
     GOV_CLEARS = 496, // 4% bonus per Grounds of Valor Page clear
 
@@ -945,36 +973,37 @@ enum class Mod
 
     EGGHELM = 517,
 
-    SHIELDBLOCKRATE           = 518, // Affects shield block rate, percent based
-    DIA_DOT                   = 313, // Increases the DoT damage of Dia
-    ENH_DRAIN_ASPIR           = 315, // % damage boost to Drain and Aspir
-    AUGMENTS_ABSORB_LIBERATOR = 521, // Direct Absorb spell increase while Liberator is equipped (percentage based) (Augments "Absorb" spells)
-    AMMO_SWING                = 523, // Follow-up swing rate w/ virtue stone ammo (Jailer weapons). Does nothing for non-players.
-    AUGMENTS_CONVERT          = 525, // Convert HP to MP Ratio Multiplier. Value = MP multiplier rate.
-    AUGMENTS_SA               = 526, // Adds Critical Attack Bonus to Sneak Attack, percentage based.
-    AUGMENTS_TA               = 527, // Adds Critical Attack Bonus to Trick Attack, percentage based.
-    AUGMENTS_FEINT            = 502, // Feint will give another -10 Evasion per merit level
-    AUGMENTS_ASSASSINS_CHARGE = 886, // Gives Assassin's Charge +1% Critical Hit Rate per merit level
-    AUGMENTS_AMBUSH           = 887, // Gives +1% Triple Attack per merit level when Ambush conditions are met
-    AUGMENTS_AURA_STEAL       = 889, // 20% chance of 2 effects to be dispelled or stolen per merit level
-    AUGMENTS_CONSPIRATOR      = 912, // Applies Conspirator benefits to player at the top of the hate list
-    ENHANCES_REFRESH          = 529, // "Enhances Refresh" adds +1 per modifier to spell's tick result.
-    NO_SPELL_MP_DEPLETION     = 530, // % to not deplete MP on spellcast.
-    STONESKIN_BONUS_HP        = 539, // Bonus "HP" granted to Stoneskin spell.
-    DAY_NUKE_BONUS            = 565, // Bonus damage from "Elemental magic affected by day" (Sorc. Tonban)
-    IRIDESCENCE               = 566, // Iridescence trait (additional weather damage/penalty)
-    BARSPELL_AMOUNT           = 567, // Additional elemental resistance granted by bar- spells
-    BARSPELL_MDEF_BONUS       = 827, // Extra magic defense bonus granted to the bar- spell effect
-    RAPTURE_AMOUNT            = 568, // Bonus amount added to Rapture effect
-    EBULLIENCE_AMOUNT         = 569, // Bonus amount added to Ebullience effect
-    AQUAVEIL_COUNT            = 832, // Modifies the amount of hits that Aquaveil absorbs before being removed
-    ENH_MAGIC_DURATION        = 890, // Enhancing Magic Duration increase %
-    ENHANCES_COURSERS_ROLL    = 891, // Courser's Roll Bonus % chance
-    ENHANCES_CASTERS_ROLL     = 892, // Caster's Roll Bonus % chance
-    ENHANCES_BLITZERS_ROLL    = 893, // Blitzer's Roll Bonus % chance
-    ENHANCES_ALLIES_ROLL      = 894, // Allies' Roll Bonus % chance
-    ENHANCES_TACTICIANS_ROLL  = 895, // Tactician's Roll Bonus % chance
-    OCCULT_ACUMEN             = 902, // Grants bonus TP when dealing damage with elemental or dark magic
+    SHIELDBLOCKRATE           = 518,  // Affects shield block rate, percent based
+    DIA_DOT                   = 313,  // Increases the DoT damage of Dia
+    ENH_DRAIN_ASPIR           = 315,  // % damage boost to Drain and Aspir
+    AUGMENTS_ABSORB_LIBERATOR = 521,  // Direct Absorb spell increase while Liberator is equipped (percentage based) (Augments "Absorb" spells)
+    AMMO_SWING                = 523,  // Follow-up swing rate w/ virtue stone ammo (Jailer weapons). Does nothing for non-players.
+    AUGMENTS_CONVERT          = 525,  // Convert HP to MP Ratio Multiplier. Value = MP multiplier rate.
+    AUGMENTS_SA               = 526,  // Adds Critical Attack Bonus to Sneak Attack, percentage based.
+    AUGMENTS_TA               = 527,  // Adds Critical Attack Bonus to Trick Attack, percentage based.
+    AUGMENTS_FEINT            = 502,  // Feint will give another -10 Evasion per merit level
+    AUGMENTS_ASSASSINS_CHARGE = 886,  // Gives Assassin's Charge +1% Critical Hit Rate per merit level
+    AUGMENTS_AMBUSH           = 887,  // Gives +1% Triple Attack per merit level when Ambush conditions are met
+    AUGMENTS_AURA_STEAL       = 889,  // 20% chance of 2 effects to be dispelled or stolen per merit level
+    AUGMENTS_CONSPIRATOR      = 912,  // Applies Conspirator benefits to player at the top of the hate list
+    ENHANCES_REFRESH          = 529,  // "Enhances Refresh" adds +1 per modifier to spell's tick result.
+    NO_SPELL_MP_DEPLETION     = 530,  // % to not deplete MP on spellcast.
+    STONESKIN_BONUS_HP        = 539,  // Bonus "HP" granted to Stoneskin spell.
+    DAY_NUKE_BONUS            = 565,  // Bonus damage from "Elemental magic affected by day" (Sorc. Tonban)
+    DAY_WEATHER_PROC_BONUS    = 1787, // Bonus damage from Twilight cape which works with both day OR weather procs.
+    IRIDESCENCE               = 566,  // Iridescence trait (additional weather damage/penalty)
+    BARSPELL_AMOUNT           = 567,  // Additional elemental resistance granted by bar- spells
+    BARSPELL_MDEF_BONUS       = 827,  // Extra magic defense bonus granted to the bar- spell effect
+    RAPTURE_AMOUNT            = 568,  // Bonus amount added to Rapture effect
+    EBULLIENCE_AMOUNT         = 569,  // Bonus amount added to Ebullience effect
+    AQUAVEIL_COUNT            = 832,  // Modifies the amount of hits that Aquaveil absorbs before being removed
+    ENH_MAGIC_DURATION        = 890,  // Enhancing Magic Duration increase %
+    ENHANCES_COURSERS_ROLL    = 891,  // Courser's Roll Bonus % chance
+    ENHANCES_CASTERS_ROLL     = 892,  // Caster's Roll Bonus % chance
+    ENHANCES_BLITZERS_ROLL    = 893,  // Blitzer's Roll Bonus % chance
+    ENHANCES_ALLIES_ROLL      = 894,  // Allies' Roll Bonus % chance
+    ENHANCES_TACTICIANS_ROLL  = 895,  // Tactician's Roll Bonus % chance
+    OCCULT_ACUMEN             = 902,  // Grants bonus TP when dealing damage with elemental or dark magic
 
     QUICK_MAGIC = 909, // Percent chance spells cast instantly (also reduces recast to 0, similar to Chainspell)
 
@@ -1112,12 +1141,14 @@ enum class Mod
 
     MOGHANCEMENT_GIL_BONUS_P = 1158, // Kill shot gil bonus (yes, really)
 
+    KNOCKBACK_REDUCTION = 1172, // Reduces distance knocked +? gear. See Knockback enum.
+
     // IF YOU ADD ANY NEW MODIFIER HERE, ADD IT IN scripts/enum/mod.lua ASWELL!
 
     // The spares take care of finding the next ID to use so long as we don't forget to list IDs that have been freed up by refactoring.
     // 570 through 825 used by WS DMG mods these are not spares.
     //
-    // SPARE IDs: 1170 and onward
+    // SPARE IDs: 1195 and onward
 };
 
 // temporary workaround for using enum class as unordered_map key until compilers support it

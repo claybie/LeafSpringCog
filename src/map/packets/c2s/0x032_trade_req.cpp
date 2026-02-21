@@ -22,9 +22,10 @@
 #include "0x032_trade_req.h"
 
 #include "entities/charentity.h"
-#include "packets/message_system.h"
+#include "enums/msg_std.h"
 #include "packets/s2c/0x021_item_trade_req.h"
 #include "packets/s2c/0x022_item_trade_res.h"
+#include "packets/s2c/0x053_systemmes.h"
 #include "trade_container.h"
 #include "universal_container.h"
 #include "utils/charutils.h"
@@ -57,8 +58,7 @@ void GP_CLI_COMMAND_TRADE_REQ::process(MapSession* PSession, CCharEntity* PChar)
 
     // If either player is crafting, don't allow the trade request.
     // TODO: Not retail accurate but leaving it here for now.
-    if (PChar->animation == ANIMATION_SYNTH || (PChar->CraftContainer && PChar->CraftContainer->getItemsCount() > 0) ||
-        PTarget->animation == ANIMATION_SYNTH || (PTarget->CraftContainer && PTarget->CraftContainer->getItemsCount() > 0))
+    if (PChar->isCrafting() || PTarget->isCrafting())
     {
         ShowError("%s trade request with %s was blocked. They are synthing!", PChar->getName(), PTarget->getName());
         PChar->pushPacket<GP_SERV_COMMAND_ITEM_TRADE_RES>(PTarget, GP_ITEM_TRADE_RES_KIND::ErrYouTrade);
@@ -71,9 +71,9 @@ void GP_CLI_COMMAND_TRADE_REQ::process(MapSession* PSession, CCharEntity* PChar)
     {
         ShowDebug("%s is blocking trades", PTarget->getName());
         // Target is blocking assistance
-        PChar->pushPacket<CMessageSystemPacket>(0, 0, MsgStd::TargetIsCurrentlyBlocking);
+        PChar->pushPacket<GP_SERV_COMMAND_SYSTEMMES>(0, 0, MsgStd::TargetIsCurrentlyBlocking);
         // Interaction was blocked
-        PTarget->pushPacket<CMessageSystemPacket>(0, 0, MsgStd::BlockedByBlockaid);
+        PTarget->pushPacket<GP_SERV_COMMAND_SYSTEMMES>(0, 0, MsgStd::BlockedByBlockaid);
         PChar->pushPacket<GP_SERV_COMMAND_ITEM_TRADE_RES>(PTarget, GP_ITEM_TRADE_RES_KIND::ErrYouTrade);
         return;
     }

@@ -6,6 +6,31 @@ xi.job_utils = xi.job_utils or {}
 xi.job_utils.ranger = xi.job_utils.ranger or {}
 
 -----------------------------------
+-- Helper Functions
+-----------------------------------
+
+-- TODO: Remove this logic when Fire and Brimstone quest is converted to IF
+xi.job_utils.ranger.tryScavengeQuestItem = function(player)
+    local fireAndBrimstoneCS = player:getCharVar('fireAndBrimstone')
+
+    if
+        player:getZoneID() == xi.zone.CASTLE_OZTROJA and
+        fireAndBrimstoneCS == 5 and
+        not player:hasItem(xi.item.OLD_EARRING) and
+        player:getYPos() > -43 and player:getYPos() < -38 and
+        player:getXPos() > -85 and player:getXPos() < -73 and
+        player:getZPos() > -85 and player:getZPos() < -75 and
+        math.random(1, 100) <= 50
+    then
+        npcUtil.giveItem(player, xi.item.OLD_EARRING)
+
+        return true
+    end
+
+    return false
+end
+
+-----------------------------------
 -- Ability Check Functions
 -----------------------------------
 
@@ -128,6 +153,7 @@ xi.job_utils.ranger.useEagleEyeShot = function(player, target, ability, action)
     local params = {}
 
     params.numHits = 1
+    params.ignoreShadows = true -- Eagle Eye Shot bypasses Utsusemi and Blink
 
     -- TP params.
     local tp          = 1000 -- to ensure ftp multiplier is applied
@@ -154,10 +180,8 @@ xi.job_utils.ranger.useEagleEyeShot = function(player, target, ability, action)
     -- Set the message id ourselves
     if tpHits + extraHits > 0 then
         action:messageID(target:getID(), xi.msg.basic.JA_DAMAGE)
-        action:speceffect(target:getID(), 32)
     else
         action:messageID(target:getID(), xi.msg.basic.JA_MISS_2)
-        action:speceffect(target:getID(), 0)
     end
 
     return damage
@@ -165,63 +189,61 @@ end
 
 xi.job_utils.ranger.useVelocityShot = function(player, target, ability, action)
     player:addStatusEffect(xi.effect.VELOCITY_SHOT, 1, 0, 7200)
+
+    return xi.effect.VELOCITY_SHOT
 end
 
 xi.job_utils.ranger.useSharpshot = function(player, target, ability, action)
     local power = 40 + player:getMod(xi.mod.SHARPSHOT)
     player:addStatusEffect(xi.effect.SHARPSHOT, power, 0, 60)
+
+    return xi.effect.SHARPSHOT
 end
 
 xi.job_utils.ranger.useScavenge = function(player, target, ability, action)
     -- RNG AF2 quest check
-    local fireAndBrimstoneCS = player:getCharVar('fireAndBrimstone')
+    if xi.job_utils.ranger.tryScavengeQuestItem(player) then
+        return
+    end
 
-    if
-        player:getZoneID() == xi.zone.CASTLE_OZTROJA and fireAndBrimstoneCS == 5 and-- zone + quest match
-        not player:hasItem(xi.item.OLD_EARRING) and -- make sure player doesn't already have the earring
-        player:getYPos() > -43 and player:getYPos() < -38 and -- Y match
-        player:getXPos() > -85 and player:getXPos() < -73 and -- X match
-        player:getZPos() > -85 and player:getZPos() < -75 and -- Z match
-        math.random(1, 100) <= 50
-    then
-        npcUtil.giveItem(player, xi.item.OLD_EARRING)
+    local bonuses        = (player:getMod(xi.mod.SCAVENGE_EFFECT) + player:getMerit(xi.merit.SCAVENGE_EFFECT)) / 100
+    local arrowsToReturn = math.floor(math.floor(player:getLocalVar('ArrowsUsed') % 10000) * (player:getMainLvl() / 200 + bonuses))
+    local playerID       = target:getID()
 
+    if arrowsToReturn == 0 then
+        action:messageID(playerID, xi.msg.basic.SCAVENGE_FIND_NOTHING)
     else
-        local bonuses        = (player:getMod(xi.mod.SCAVENGE_EFFECT) + player:getMerit(xi.merit.SCAVENGE_EFFECT)) / 100
-        local arrowsToReturn = math.floor(math.floor(player:getLocalVar('ArrowsUsed') % 10000) * (player:getMainLvl() / 200 + bonuses))
-        local playerID       = target:getID()
-
-        if arrowsToReturn == 0 then
-            action:messageID(playerID, 139)
-        else
-            if arrowsToReturn > 99 then
-                arrowsToReturn = 99
-            end
-
-            local arrowID = math.floor(player:getLocalVar('ArrowsUsed') / 10000)
-            player:addItem(arrowID, arrowsToReturn)
-
-            if arrowsToReturn == 1 then
-                action:messageID(playerID, 140)
-            else
-                action:messageID(playerID, 674)
-                action:additionalEffect(playerID, 1)
-                action:addEffectParam(playerID, arrowsToReturn)
-            end
-
-            player:setLocalVar('ArrowsUsed', 0)
-            return arrowID
+        if arrowsToReturn > 99 then
+            arrowsToReturn = 99
         end
+
+        local arrowID = math.floor(player:getLocalVar('ArrowsUsed') / 10000)
+        player:addItem(arrowID, arrowsToReturn)
+
+        if arrowsToReturn == 1 then
+            action:messageID(playerID, xi.msg.basic.SCAVENGE_FIND_ITEM)
+        else
+            action:messageID(playerID, xi.msg.basic.SCAVENGE_FIND_ITEMS)
+            action:additionalEffect(playerID, 1)
+            action:addEffectParam(playerID, arrowsToReturn)
+        end
+
+        player:setLocalVar('ArrowsUsed', 0)
+        return arrowID
     end
 end
 
 xi.job_utils.ranger.useCamouflage = function(player, target, ability, action)
     local duration = math.random(30, 300) * (1 + 0.01 * player:getMod(xi.mod.CAMOUFLAGE_DURATION))
-    player:addStatusEffect(xi.effect.CAMOUFLAGE, 1 , 0, math.floor(duration * xi.settings.main.SNEAK_INVIS_DURATION_MULTIPLIER))
+    player:addStatusEffect(xi.effect.CAMOUFLAGE, 1, 0, math.floor(duration * xi.settings.main.SNEAK_INVIS_DURATION_MULTIPLIER))
+
+    return xi.effect.CAMOUFLAGE
 end
 
 xi.job_utils.ranger.useBarrage = function(player, target, ability, action)
     player:addStatusEffect(xi.effect.BARRAGE, 0, 0, 60)
+
+    return xi.effect.BARRAGE
 end
 
 xi.job_utils.ranger.useShadowbind = function(player, target, ability, action)
@@ -251,18 +273,27 @@ end
 
 xi.job_utils.ranger.useUnlimitedShot = function(player, target, ability, action)
     player:addStatusEffect(xi.effect.UNLIMITED_SHOT, 1, 0, 60)
+
+    return xi.effect.UNLIMITED_SHOT
 end
 
 xi.job_utils.ranger.useFlashyShot = function(player, target, ability, action)
-    return 0, 0 -- Not implemented yet
+    -- TODO: Flashy Shot should add "D" damage to the next ranged attack
+    player:addStatusEffect(xi.effect.FLASHY_SHOT, 1, 0, 60)
+
+    return xi.effect.FLASHY_SHOT
 end
 
 xi.job_utils.ranger.useStealthShot = function(player, target, ability, action)
-    return 0, 0 -- Not implemented yet
+    player:addStatusEffect(xi.effect.STEALTH_SHOT, 1, 0, 60)
+
+    return xi.effect.STEALTH_SHOT
 end
 
 xi.job_utils.ranger.useDoubleShot = function(player, target, ability, action)
     player:addStatusEffect(xi.effect.DOUBLE_SHOT, 40, 0, 90)
+
+    return xi.effect.DOUBLE_SHOT
 end
 
 xi.job_utils.ranger.useBountyShot = function(player, target, ability, action)
@@ -279,7 +310,7 @@ xi.job_utils.ranger.useBountyShot = function(player, target, ability, action)
 
     player:removeAmmo(1) -- TODO: does this check recycle?
 
-    action:speceffect(target:getID(), 0x01) -- functional, animation not correct without this
+    action:info(target:getID(), 1) -- Bounty shot sets the first bit likely for animation purposes
     ability:setMsg(xi.msg.basic.JA_NO_EFFECT_2)
 
     target:updateClaim(player)
@@ -337,6 +368,8 @@ end
 
 xi.job_utils.ranger.useDecoyShot = function(player, target, ability, action)
     target:addStatusEffect(xi.effect.DECOY_SHOT, 11, 1, 30)
+
+    return xi.effect.DECOY_SHOT
 end
 
 xi.job_utils.ranger.useHoverShot = function(player, target, ability, action)
@@ -345,4 +378,6 @@ end
 
 xi.job_utils.ranger.useOverkill = function(player, target, ability, action)
     player:addStatusEffect(xi.effect.OVERKILL, 11, 1, 60)
+
+    return xi.effect.OVERKILL
 end

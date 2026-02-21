@@ -9,23 +9,27 @@ mixins = { require('scripts/mixins/job_special') }
 local entity = {}
 
 entity.onMobInitialize = function(mob)
+    mob:addImmunity(xi.immunity.DARK_SLEEP)
+    mob:addImmunity(xi.immunity.LIGHT_SLEEP)
+    mob:addImmunity(xi.immunity.TERROR)
+    mob:addImmunity(xi.immunity.PLAGUE)
     mob:setMobMod(xi.mobMod.ADD_EFFECT, 1)
     mob:setMobMod(xi.mobMod.IDLE_DESPAWN, 300)
     mob:setMobMod(xi.mobMod.GIL_MIN, 18000)
     mob:setMobMod(xi.mobMod.GIL_MAX, 18000)
+    mob:setMobMod(xi.mobMod.CANNOT_GUARD, 1)
+    mob:setMobMod(xi.mobMod.WEAPON_BONUS, 34)
+    mob:setMobMod(xi.mobMod.MAGIC_COOL, 35)
 end
 
 entity.onMobSpawn = function(mob)
     mob:messageText(mob, ID.text.SKY_GOD_OFFSET + 9) -- Spawn message
     GetNPCByID(ID.npc.PORTAL_OFFSET + 2):setAnimation(xi.anim.CLOSE_DOOR)
-    mob:setMobMod(xi.mobMod.CANNOT_GUARD, 1)
-    mob:setMobMod(xi.mobMod.WEAPON_BONUS, 34)
-    mob:setMobMod(xi.mobMod.MAGIC_COOL, 35)
     mob:setMod(xi.mod.REGAIN, 450) -- Uses TP move every 20 seconds
 
     -- Sky gods wait 10 seconds after spawning to start casting
     mob:setMagicCastingEnabled(false)
-    mob:timer(10000, function(mobArg)
+    mob:timer(math.random(5000, 10000), function(mobArg)
         if mobArg then
             mobArg:setMagicCastingEnabled(true)
         end
@@ -56,7 +60,16 @@ entity.onMobWeaponSkill = function(target, mob, skill)
 end
 
 entity.onAdditionalEffect = function(mob, target, damage)
-    return xi.mob.onAddEffect(mob, target, damage, xi.mob.ae.ENAERO)
+    local pTable =
+    {
+        chance         = 100,
+        attackType     = xi.attackType.MAGICAL,
+        magicalElement = xi.element.WIND,
+        basePower      = math.floor(damage / 2),
+        actorStat      = xi.mod.INT,
+    }
+
+    return xi.combat.action.executeAddEffectDamage(mob, target, pTable)
 end
 
 entity.onMobDeath = function(mob, player, optParams)

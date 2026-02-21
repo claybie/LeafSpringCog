@@ -21,7 +21,6 @@
 
 #include "trustutils.h"
 
-#include "common/timer.h"
 #include "common/utils.h"
 
 #include <algorithm>
@@ -34,7 +33,6 @@
 #include "zoneutils.h"
 
 #include "grades.h"
-#include "mob_modifier.h"
 #include "mob_spell_list.h"
 
 #include "ai/ai_container.h"
@@ -44,9 +42,6 @@
 #include "entities/trustentity.h"
 #include "items/item_weapon.h"
 #include "mobskill.h"
-#include "packets/char_sync.h"
-#include "packets/entity_update.h"
-#include "packets/message_standard.h"
 #include "status_effect_container.h"
 #include "weapon_skill.h"
 #include "zone_instance.h"
@@ -69,7 +64,8 @@ struct TrustData
     ECOSYSTEM   EcoSystem{}; // ecosystem
 
     uint8  name_prefix{};
-    uint8  radius{}; // Model Radius - affects melee range etc.
+    uint8  modelSize{ 0 };
+    float  modelHitboxSize{ 0.0f };
     uint16 m_Family{};
 
     uint8 mJob{};
@@ -207,8 +203,9 @@ void BuildTrustData(uint32 TrustID)
                                        "mob_pools.cmbDmgMult, "
                                        "mob_pools.name_prefix, "
                                        "mob_pools.skill_list_id, "
+                                       "mob_pools.modelSize, "
+                                       "mob_pools.modelHitboxSize, "
                                        "spell_list.spellid, "
-                                       "mob_family_system.mobradius, "
                                        "mob_family_system.ecosystemID, "
                                        "(mob_family_system.HP / 100) AS HP, "
                                        "(mob_family_system.MP / 100) AS MP, "
@@ -273,10 +270,11 @@ void BuildTrustData(uint32 TrustID)
             data->name_prefix    = rset->get<uint8>("name_prefix");
             data->m_MobSkillList = rset->get<uint16>("skill_list_id");
 
-            data->radius    = rset->get<uint8>("mobradius");
-            data->EcoSystem = rset->get<ECOSYSTEM>("ecosystemID");
-            data->HPscale   = rset->get<float>("HP");
-            data->MPscale   = rset->get<float>("MP");
+            data->modelSize       = rset->getOrDefault<uint8>("modelSize", 0);
+            data->modelHitboxSize = std::max<float>(0.0f, rset->getOrDefault<float>("modelHitboxSize", 0) / 10.f);
+            data->EcoSystem       = rset->get<ECOSYSTEM>("ecosystemID");
+            data->HPscale         = rset->get<float>("HP");
+            data->MPscale         = rset->get<float>("MP");
 
             data->baseSpeed      = 62;
             data->animationSpeed = 50;
@@ -365,10 +363,11 @@ auto LoadTrust(CCharEntity* PMaster, uint32 TrustID) -> CTrustEntity*
     PTrust->baseSpeed      = trustData->baseSpeed;
     PTrust->animationSpeed = trustData->animationSpeed;
     PTrust->UpdateSpeed();
-    PTrust->m_TrustID     = trustData->trustID;
-    PTrust->status        = STATUS_TYPE::NORMAL;
-    PTrust->m_ModelRadius = trustData->radius;
-    PTrust->m_EcoSystem   = trustData->EcoSystem;
+    PTrust->m_TrustID       = trustData->trustID;
+    PTrust->status          = STATUS_TYPE::NORMAL;
+    PTrust->modelSize       = trustData->modelSize;
+    PTrust->modelHitboxSize = trustData->modelHitboxSize;
+    PTrust->m_EcoSystem     = trustData->EcoSystem;
 
     PTrust->SetMJob(trustData->mJob);
     PTrust->SetSJob(trustData->sJob);
@@ -454,8 +453,7 @@ void LoadTrustStatsAndSkills(CTrustEntity* PTrust)
 
     // Helpers to map HP/MPScale around 100 to 1-7 grades
     // std::clamp doesn't play nice with uint8, so -> unsigned int
-    auto mapRanges = [](unsigned int inputStart, unsigned int inputEnd, unsigned int outputStart, unsigned int outputEnd,
-                        unsigned int inputVal) -> unsigned int
+    auto mapRanges = [](unsigned int inputStart, unsigned int inputEnd, unsigned int outputStart, unsigned int outputEnd, unsigned int inputVal) -> unsigned int
     {
         unsigned int inputRange  = inputEnd - inputStart;
         unsigned int outputRange = outputEnd - outputStart;
@@ -530,7 +528,9 @@ void LoadTrustStatsAndSkills(CTrustEntity* PTrust)
                    (grade::GetHPScale(grade, scaleOver30Column) * subLevelOver30) + subLevelOver30 + subLevelOver10;
     }
 
-    PTrust->health.maxhp = (int16)(settings::get<float>("map.ALTER_EGO_HP_MULTIPLIER") * (raceStat + jobStat + bonusStat + sJobStat));
+    auto hpMultiplierTrust = settings::get<float>("map.ALTER_EGO_HP_MULTIPLIER");
+    hpMultiplierTrust      = (hpMultiplierTrust >= 0.1f && hpMultiplierTrust <= 2.0f) ? hpMultiplierTrust : 1.0f;
+    PTrust->health.maxhp   = (int16)((raceStat + jobStat + bonusStat + sJobStat) * hpMultiplierTrust);
 
     // MP
     raceStat = 0;
@@ -566,7 +566,9 @@ void LoadTrustStatsAndSkills(CTrustEntity* PTrust)
         sJobStat = grade::GetMPScale(grade, 0) + grade::GetMPScale(grade, scaleTo60Column);
     }
 
-    PTrust->health.maxmp = (int16)(settings::get<float>("map.ALTER_EGO_MP_MULTIPLIER") * (raceStat + jobStat + sJobStat));
+    auto mpMultiplierTrust = settings::get<float>("map.ALTER_EGO_MP_MULTIPLIER");
+    mpMultiplierTrust      = (mpMultiplierTrust >= 0.1f && mpMultiplierTrust <= 2.0f) ? mpMultiplierTrust : 1.0f;
+    PTrust->health.maxmp   = (int16)((raceStat + jobStat + sJobStat) * mpMultiplierTrust);
 
     PTrust->health.tp = 0;
     PTrust->UpdateHealth();
@@ -620,6 +622,7 @@ void LoadTrustStatsAndSkills(CTrustEntity* PTrust)
     }
 
     auto statMultiplier = settings::get<float>("map.ALTER_EGO_STAT_MULTIPLIER");
+    statMultiplier      = (statMultiplier >= 0.1f && statMultiplier <= 2.0f) ? statMultiplier : 1.0f;
     PTrust->stats.STR   = static_cast<uint16>((fSTR + mSTR + sSTR) * statMultiplier);
     PTrust->stats.DEX   = static_cast<uint16>((fDEX + mDEX + sDEX) * statMultiplier);
     PTrust->stats.VIT   = static_cast<uint16>((fVIT + mVIT + sVIT) * statMultiplier);

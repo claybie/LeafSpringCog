@@ -38,9 +38,7 @@
 #include "states/magic_state.h"
 #include "states/mobskill_state.h"
 #include "states/petskill_state.h"
-#include "states/raise_state.h"
 #include "states/range_state.h"
-#include "states/respawn_state.h"
 #include "states/synth_state.h"
 #include "states/trigger_state.h"
 #include "states/weaponskill_state.h"
@@ -51,7 +49,9 @@ CAIContainer::CAIContainer(CBaseEntity* _PEntity)
 {
 }
 
-CAIContainer::CAIContainer(CBaseEntity* _PEntity, std::unique_ptr<CPathFind>&& _pathfind, std::unique_ptr<CController>&& _controller,
+CAIContainer::CAIContainer(CBaseEntity*                   _PEntity,
+                           std::unique_ptr<CPathFind>&&   _pathfind,
+                           std::unique_ptr<CController>&& _controller,
                            std::unique_ptr<CTargetFind>&& _targetfind)
 : TargetFind(std::move(_targetfind))
 , PathFind(std::move(_pathfind))
@@ -345,16 +345,6 @@ bool CAIContainer::Internal_Die(timer::duration deathTime)
     return false;
 }
 
-bool CAIContainer::Internal_Raise()
-{
-    auto* entity = dynamic_cast<CBattleEntity*>(PEntity);
-    if (entity)
-    {
-        return ForceChangeState<CRaiseState>(entity);
-    }
-    return false;
-}
-
 bool CAIContainer::Internal_UseItem(uint16 targetid, uint8 loc, uint8 slotid)
 {
     auto* entity = dynamic_cast<CCharEntity*>(PEntity);
@@ -547,18 +537,9 @@ void CAIContainer::checkQueueImmediately()
 
 bool CAIContainer::Internal_Despawn(bool instantDespawn)
 {
-    if (!IsCurrentState<CDespawnState>() && !IsCurrentState<CRespawnState>())
+    if (!IsCurrentState<CDespawnState>())
     {
         return ForceChangeState<CDespawnState>(PEntity, instantDespawn);
-    }
-    return false;
-}
-
-bool CAIContainer::Internal_Respawn(timer::duration _duration)
-{
-    if (!IsCurrentState<CRespawnState>())
-    {
-        return ForceChangeState<CRespawnState>(PEntity, _duration);
     }
     return false;
 }
@@ -580,4 +561,13 @@ void CAIContainer::CheckCompletedStates()
         m_stateStack.top()->Cleanup(timer::now());
         m_stateStack.pop();
     }
+}
+
+bool CAIContainer::Accept_Raise()
+{
+    if (IsCurrentState<CDeathState>())
+    {
+        static_cast<CDeathState*>(PEntity->PAI->GetCurrentState())->acceptRaise();
+    }
+    return false;
 }

@@ -9,7 +9,7 @@
 
 </p>
 
-LeafSpringCog is a fork of LandSandBoat with minimal changes, which the [Rheinland-Pfalz](https://github.com/claybie/rheinland-pfalz) server runs on.
+LeafSpringCog is a fork of LandSandBoat, with small code changes tuned for the [Rheinland-Pfalz](https://github.com/claybie/rheinland-pfalz) server.
 
 Visit the LandSandBoat [project page](https://github.com/LandSandBoat/server/) for more info. LeafSpringCog is licensed under [GNU GPL v3](https://github.com/LandSandBoat/server/blob/base/LICENSE).
 

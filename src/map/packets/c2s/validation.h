@@ -117,7 +117,10 @@ public:
         if (val < minVal || val > maxVal)
         {
             result_.addError(std::format("{} out of range: {} not in [{}, {}]",
-                                         fieldName, val, minVal, maxVal));
+                                         fieldName,
+                                         val,
+                                         minVal,
+                                         maxVal));
         }
 
         return *this;
@@ -188,6 +191,8 @@ public:
         return *this;
     }
 
+    // Character must not be resting
+    auto isNotResting(const CCharEntity* PChar) -> PacketValidator&;
     // Character must not be crafting
     auto isNotCrafting(const CCharEntity* PChar) -> PacketValidator&;
     // Character current status must be NORMAL
@@ -208,6 +213,20 @@ public:
     auto isAllianceLeader(const CCharEntity* PChar) -> PacketValidator&;
     // Character must not be fishing
     auto isNotFishing(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be sitting
+    auto isNotSitting(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be charmed
+    auto isNotCharmed(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be mounted
+    auto isNotMounted(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must be engaged in combat
+    auto isEngaged(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be engaged in combat
+    auto isNotEngaged(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be in an event
+    auto isNotInEvent(const CCharEntity* PChar) -> PacketValidator&;
+    // Character must not be jailed
+    auto isNotJailed(const CCharEntity* PChar) -> PacketValidator&;
 
     // Custom validation function
     template <typename Func>

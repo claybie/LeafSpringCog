@@ -20,73 +20,64 @@
 */
 
 #include "lua_simulation.h"
+
+#include "common/lua.h"
 #include "common/vana_time.h"
+#include "enums/packet_c2s.h"
 #include "enums/tick_type.h"
 #include "helpers/lua_client_entity_pair_packets.h"
 #include "in_memory_sink.h"
 #include "lua_client_entity_pair.h"
 #include "lua_spy.h"
+#include "lua_test_entity.h"
 #include "map/ai/ai_container.h"
 #include "map/conquest_data.h"
 #include "map/conquest_system.h"
 #include "map/entities/baseentity.h"
+#include "map/entities/mobentity.h"
 #include "map/lua/lua_baseentity.h"
 #include "map/lua/luautils.h"
+#include "map/map_constants.h"
 #include "map/map_engine.h"
 #include "map/map_networking.h"
 #include "map/packets/c2s/0x00a_login.h"
+#include "map/spawn_slot.h"
 #include "map/time_server.h"
 #include "map/utils/charutils.h"
 #include "map/utils/zoneutils.h"
 #include "map/zone.h"
 #include "map/zone_entities.h"
+#include "spawn_handler.h"
 #include "test_char.h"
 #include "test_common.h"
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 
 namespace
 {
-    auto durationToVanaTime = [](const uint8 vanaHour, const uint8 vanaMinute) -> earth_time::duration
+
+auto durationToVanaTime = [](const uint8 vanaHour, const uint8 vanaMinute) -> earth_time::duration
+{
+    const auto vanaNow    = vanadiel_time::now();
+    auto       vanaTarget = std::chrono::floor<xi::vanadiel_clock::days>(vanaNow) + xi::vanadiel_clock::hours(vanaHour) + xi::vanadiel_clock::minutes(vanaMinute);
+
+    if (vanaTarget <= vanaNow)
+
     {
-        const auto vanaNow    = vanadiel_time::now();
-        auto       vanaTarget = std::chrono::floor<xi::vanadiel_clock::days>(vanaNow) + xi::vanadiel_clock::hours(vanaHour) + xi::vanadiel_clock::minutes(vanaMinute);
+        vanaTarget += xi::vanadiel_clock::days(1);
+    }
 
-        if (vanaTarget <= vanaNow)
+    return std::chrono::duration_cast<earth_time::duration>(vanaTarget - vanaNow);
+};
 
-        {
-            vanaTarget += xi::vanadiel_clock::days(1);
-        }
-
-        return std::chrono::duration_cast<earth_time::duration>(vanaTarget - vanaNow);
-    };
 } // namespace
 
 CLuaSimulation::CLuaSimulation(MapEngine* _mapServer, const std::shared_ptr<InMemorySink>& _sink)
 : engine_{ _mapServer }
 , sink_{ _sink }
 {
-}
-
-/************************************************************************
- *  Function: loadZone()
- *  Purpose : Force load of zones.
- *  Example : sim:loadZone(xi.zone.RABAO, xi.zone.MHAURA)
- *  Notes   : Only required when events teleport to zones that are not currently loaded.
- ************************************************************************/
-
-void CLuaSimulation::loadZone(sol::variadic_args va) const
-{
-    std::vector<uint16> zoneIds;
-    for (auto&& zoneId : va)
-    {
-        auto zoneIdNum = zoneId.as<uint16>();
-        ShowInfoFmt("Loading zone ID: {}", zoneIdNum);
-        zoneIds.push_back(zoneIdNum);
-    }
-
-    zoneutils::LoadZones(zoneIds);
 }
 
 void CLuaSimulation::cleanClients(std::optional<ClientScope> scope)
@@ -99,12 +90,14 @@ void CLuaSimulation::cleanClients(std::optional<ClientScope> scope)
     else
     {
         // Clean only clients with matching scope
-        // clang-format off
-        auto [first, last] = std::ranges::remove_if(clients_, [scope](const ClientInfo& info)
-        {
-             return info.scope == scope.value();
-        });
-        // clang-format on
+
+        auto [first, last] = std::ranges::remove_if(
+            clients_,
+            [scope](const ClientInfo& info)
+            {
+                return info.scope == scope.value();
+            });
+
         clients_.erase(first, last);
     }
 }
@@ -154,7 +147,16 @@ void CLuaSimulation::skipTime(uint32 seconds) const
 void CLuaSimulation::setVanaTime(const uint8 vanaHour, const uint8 vanaMinute) const
 {
     ShowInfoFmt("Skipping to Vana'diel time {:02d}:{:02d}", vanaHour, vanaMinute);
+
+    const auto prevTotd = vanadiel_time::get_totd();
     earth_time::add_offset(durationToVanaTime(vanaHour, vanaMinute));
+    const auto newTotd = vanadiel_time::get_totd();
+
+    if (newTotd != prevTotd)
+    {
+        zoneutils::TOTDChange(newTotd);
+    }
+
     DebugTestFmt("Vana'Diel time is now {:02d}:{:02d} (day {})", vanadiel_time::get_hour(), vanadiel_time::get_minute(), vanadiel_time::get_weekday());
 }
 
@@ -211,7 +213,8 @@ void CLuaSimulation::setRegionOwner(REGION_TYPE region, NATION_TYPE nation) cons
 {
     DebugTestFmt("Setting region {} owner to nation {}", static_cast<uint8>(region), static_cast<uint8>(nation));
     auto rset = db::preparedStmt("UPDATE conquest_system SET region_control = ? WHERE region_id = ?",
-                                 static_cast<uint8>(nation), static_cast<uint8>(region));
+                                 static_cast<uint8>(nation),
+                                 static_cast<uint8>(region));
 
     if (!rset)
     {
@@ -313,6 +316,9 @@ void CLuaSimulation::tick(const std::optional<TickType> boundary) const
                 break;
             case TickType::VanadielDaily:
                 TracyZoneCString("Vanadiel Daily Tick");
+                break;
+            case TickType::SpawnHandler:
+                TracyZoneCString("Spawn Handler Tick");
                 break;
         }
     }
@@ -430,6 +436,17 @@ void CLuaSimulation::tick(const std::optional<TickType> boundary) const
             time_server(timer::now(), nullptr);
         }
         break;
+        case TickType::SpawnHandler:
+        {
+            // Tick spawn handlers for all zones
+            timer::add_offset(kSpawnHandlerInterval);
+            const auto timePoint = timer::now();
+            for (const auto* PZone : g_PZoneList | std::views::values)
+            {
+                PZone->spawnHandler()->Tick(timePoint);
+            }
+        }
+        break;
     }
 
     processClientUpdates();
@@ -463,8 +480,6 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
 
     ShowInfoFmt("Spawning player in zone: {}", zoneId);
 
-    // Load the zone
-    zoneutils::LoadZones({ zoneId });
     auto testChar = TestChar::create(zoneId);
 
     if (!testChar)
@@ -479,7 +494,13 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
     uint8      key3[20]{};
     const auto rset = db::preparedStmt("INSERT INTO accounts_sessions(accid,charid,session_key,server_addr,server_port,client_addr,version_mismatch) "
                                        "VALUES(?,?,?,?,?,?,?)",
-                                       testChar->accountId(), testChar->charId(), key3, 0, 0, testChar->charId(), 0);
+                                       testChar->accountId(),
+                                       testChar->charId(),
+                                       key3,
+                                       0,
+                                       0,
+                                       testChar->charId(),
+                                       0);
     if (!rset)
     {
         TestError("Unable to create session for account.");
@@ -498,8 +519,6 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
         db::preparedStmt("UPDATE chars SET playtime = 60 WHERE charid = ?", testChar->charId());
     }
 
-    testChar->setEntity(charutils::LoadChar(testChar->charId()));
-
     // Create client wrapper and track setup context
     ClientInfo info{
         .client = std::make_unique<CLuaClientEntityPair>(std::move(testChar), this, engine_),
@@ -509,12 +528,8 @@ auto CLuaSimulation::spawnPlayer(sol::optional<sol::table> params) -> CLuaClient
 
     auto* player = clients_.back().client.get();
 
-    // Send login packet
-    const auto packet = player->packets().createPacket(0x0A);
-    auto*      login  = packet->as<GP_CLI_COMMAND_LOGIN>();
-    login->UniqueNo   = player->getID();
-    player->packets().sendBasicPacket(*packet);
-    skipTime(3); // ZoningIn localvar is cleared up after 2500ms
+    // Complete zone-in sequence
+    player->packets().sendZonePackets();
 
     if (job.has_value())
     {
@@ -534,6 +549,46 @@ void CLuaSimulation::setSetupContext(const bool inSetup)
     inSetupContext_ = inSetup;
 }
 
+/************************************************************************
+ *  Function: getSpawnSlot()
+ *  Purpose : Returns mobs in a spawn slot as a Lua table.
+ *  Example : local mobs = xi.test.world:getSpawnSlot(xi.zone.GHELSBA_OUTPOST, 1)
+ *  Notes   : Throws an error if slot not found.
+ ************************************************************************/
+
+auto CLuaSimulation::getSpawnSlot(const ZONEID zoneId, const uint32 slotId) const -> sol::table
+{
+    auto result = lua.create_table();
+
+    auto* PZone = zoneutils::GetZone(zoneId);
+    if (!PZone)
+    {
+        TestError("Zone {} not found", static_cast<uint16_t>(zoneId));
+        return result;
+    }
+
+    const auto slotIt = PZone->m_spawnSlots.find(slotId);
+    if (slotIt == PZone->m_spawnSlots.end() || !slotIt->second)
+    {
+        TestError("Spawn slot {} not found in zone {}", slotId, static_cast<uint16_t>(zoneId));
+        return result;
+    }
+
+    const auto& entries = slotIt->second->GetEntries();
+    auto        i       = 1;
+    for (const auto& [mob, spawnChance] : entries)
+    {
+        if (mob)
+        {
+            result[i] = CLuaTestEntity(mob);
+        }
+
+        ++i;
+    }
+
+    return result;
+}
+
 void CLuaSimulation::Register()
 {
     SOL_USERTYPE("CSimulation", CLuaSimulation);
@@ -544,8 +599,8 @@ void CLuaSimulation::Register()
     SOL_REGISTER("setVanaDay", CLuaSimulation::setVanaDay);
     SOL_REGISTER("skipToNextVanaDay", CLuaSimulation::skipToNextVanaDay);
     SOL_REGISTER("setRegionOwner", CLuaSimulation::setRegionOwner);
-    SOL_REGISTER("loadZone", CLuaSimulation::loadZone);
     SOL_REGISTER("setSeed", CLuaSimulation::setSeed);
     SOL_REGISTER("seed", CLuaSimulation::seed);
     SOL_REGISTER("spawnPlayer", CLuaSimulation::spawnPlayer);
+    SOL_REGISTER("getSpawnSlot", CLuaSimulation::getSpawnSlot);
 };

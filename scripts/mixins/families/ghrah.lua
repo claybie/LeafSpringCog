@@ -10,6 +10,7 @@ local palaceID = zones[xi.zone.GRAND_PALACE_OF_HUXZOI]
 local gardenID = zones[xi.zone.THE_GARDEN_OF_RUHMET]
 -----------------------------------
 g_mixins = g_mixins or {}
+g_mixins.families = g_mixins.families or {}
 
 local mobFormLookup = {}
 
@@ -221,7 +222,6 @@ g_mixins.families.ghrah = function(ghrahMob)
         mob:addMod(xi.mod.MATT, 20) -- Ghrah have innate +20 MATT on top of BLM bonuses
         mob:addMod(xi.mod.DMGMAGIC, -1250)
         mob:addMod(xi.mod.MDEF, 20)
-        mob:setMobMod(xi.mobMod.NO_SPELL_COST, 1)
         initializeOriginalMods(mob)
 
         local config = skinConfig[skin]

@@ -1,8 +1,9 @@
 require('scripts/globals/mixins')
 
 g_mixins = g_mixins or {}
+g_mixins.families = g_mixins.families or {}
 
-g_mixins.maat = function(maatMob)
+g_mixins.families.maat = function(maatMob)
     maatMob:addListener('SPAWN', 'JOB_SPECIAL_SPAWN', function(mob)
         if mob:getMainJob() == xi.job.NIN then
             mob:setLocalVar('specialThreshold', 40)
@@ -95,9 +96,8 @@ g_mixins.maat = function(maatMob)
         mob:messageText(mob, ID.text.YOUVE_COME_A_LONG_WAY)
     end)
 
-    maatMob:addListener('WEAPONSKILL_TAKE', 'MAAT_WEAPONSKILL_TAKE', function(target, user, wsid, tp, action)
-        local ID = zones[target:getZoneID()]
-        target:messageText(target, ID.text.THAT_LL_HURT_IN_THE_MORNING)
+    maatMob:addListener('WEAPONSKILL_TAKE', 'MAAT_WEAPONSKILL_TAKE', function(user, target, skillId, tp, action)
+        target:messageText(target, zones[target:getZoneID()].text.THAT_LL_HURT_IN_THE_MORNING)
     end)
 
     maatMob:addListener('WEAPONSKILL_USE', 'MAAT_WEAPONSKILL_USE', function(mob, target, wsid, tp, action)
@@ -112,4 +112,4 @@ g_mixins.maat = function(maatMob)
     end)
 end
 
-return g_mixins.maat
+return g_mixins.families.maat

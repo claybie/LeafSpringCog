@@ -245,11 +245,13 @@ void ValidatedPacketHandler(MapSession* const PSession, CCharEntity* const PChar
 void PacketParserInitialize()
 {
     TracyZoneScoped;
+
     for (uint16 i = 0; i < 512; ++i)
     {
         PacketSize[i]   = 0;
         PacketParser[i] = &SmallPacket0x000;
     }
+
     // clang-format off
     PacketSize[0x00A] = 0x2E; PacketParser[0x00A] = &ValidatedPacketHandler<GP_CLI_COMMAND_LOGIN>;
     PacketSize[0x00C] = 0x00; PacketParser[0x00C] = &ValidatedPacketHandler<GP_CLI_COMMAND_GAMEOK>;
@@ -330,7 +332,7 @@ void PacketParserInitialize()
     PacketSize[0x0D2] = 0x04; PacketParser[0x0D2] = &ValidatedPacketHandler<GP_CLI_COMMAND_MAP_GROUP>;
     PacketSize[0x0D3] = 0x00; PacketParser[0x0D3] = &ValidatedPacketHandler<GP_CLI_COMMAND_FAQ_GMCALL>;
     PacketSize[0x0D4] = 0x04; PacketParser[0x0D4] = &ValidatedPacketHandler<GP_CLI_COMMAND_FAQ_GMPARAM>;
-    PacketSize[0x0D5] = 0x08; PacketParser[0x0D5] = &ValidatedPacketHandler<GP_CLI_COMMAND_ACK_GMMSG>;
+    PacketSize[0x0D5] = 0x06; PacketParser[0x0D5] = &ValidatedPacketHandler<GP_CLI_COMMAND_ACK_GMMSG>;
     PacketSize[0x0D8] = 0x00; PacketParser[0x0D8] = &ValidatedPacketHandler<GP_CLI_COMMAND_DUNGEON_PARAM>;
     PacketSize[0x0DB] = 0x00; PacketParser[0x0DB] = &ValidatedPacketHandler<GP_CLI_COMMAND_CONFIG_LANGUAGE>;
     PacketSize[0x0DC] = 0x0A; PacketParser[0x0DC] = &ValidatedPacketHandler<GP_CLI_COMMAND_CONFIG>;
