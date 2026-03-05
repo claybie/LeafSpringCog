@@ -66,14 +66,14 @@ xi.settings.map =
     ENMITY_CAP = 30000,
 
     -- Misc EXP related settings
-    EXP_RATE                = 0.5,
+    EXP_RATE                = 1.0,
     EXP_LOSS_RATE           = 1.0,
     EXP_PARTY_GAP_PENALTIES = true,
 
     -- A party member's experience points are nullified if the level difference with the highest-level party member exceeds this value.
     -- When set to 0, there is no nullification of EXP regardless of how wide the gap is between party members.
     -- When set to 10, if you are level 65 or below in a party with a level 75, you will receive no EXP.
-    EXP_PARTY_GAP_NO_EXP = 10,
+    EXP_PARTY_GAP_NO_EXP = 0,
 
     -- Capacity Point Settings
     CAPACITY_RATE = 1.0,
@@ -85,13 +85,13 @@ xi.settings.map =
     VANADIEL_TIME_EPOCH = 0,
 
     -- For old fame calculation use .25
-    FAME_MULTIPLIER = .25,
+    FAME_MULTIPLIER = 1.00,
 
     -- Percentage of experience normally lost to keep upon death. 0 means full loss, where 1 means no loss.
     EXP_RETAIN = 0,
 
     -- Minimum level at which experience points can be lost
-    EXP_LOSS_LEVEL = 10,
+    EXP_LOSS_LEVEL = 31,
 
     -- Minimum level at which regional influence is lost in conquest when a player dies
     -- Level 5 and below don't lose influence: http://wiki.ffo.jp/html/498.html
@@ -101,7 +101,7 @@ xi.settings.map =
     LEVEL_SYNC_ENABLE = true,
 
     -- Disables ability to equip higher level gear when level cap/sync effect is on player.
-    DISABLE_GEAR_SCALING = true,
+    DISABLE_GEAR_SCALING = false,
 
     -- Disables Treasure Hunter procs (Era behavior wants this true)
     DISABLE_TREASURE_HUNTER_PROCS = false,
@@ -162,7 +162,7 @@ xi.settings.map =
     CRAFT_HQ_CHANCE_MULTIPLIER = 1.0,
 
     -- Enable/disable all fishing, including quests. ENABLE AT YOUR OWN RISK.
-    FISHING_ENABLE = true,
+    FISHING_ENABLE = false,
 
     -- Sets the minimum level a character must be to fish.
     FISHING_MIN_LEVEL = 1,
@@ -231,7 +231,7 @@ xi.settings.map =
     MAX_GIL_BONUS = 9999,
 
     -- Allow mobs to walk back home instead of despawning
-    MOB_NO_DESPAWN = true,
+    MOB_NO_DESPAWN = false,
 
     -- Adds extra time to mob despawn in seconds. Base time is 25s, so a setting of 5 here would be a total of 30 seconds.
     MOB_ADDITIONAL_TIME_TO_DEAGGRO = 0,
@@ -246,7 +246,7 @@ xi.settings.map =
     BATTLE_CAP_TWEAK = 0,
 
     -- Enable/disable level cap of mission battlefields stored in database.
-    LV_CAP_MISSION_BCNM = true,
+    LV_CAP_MISSION_BCNM = false,
 
     -- Allow players to enter BCNMs which are flagged as experimental
     BCNM_ENABLE_EXPERIMENTAL = true,
@@ -254,7 +254,7 @@ xi.settings.map =
     -- Max allowed merits points players can hold
     -- 10 classic
     -- 30 abyssea
-    MAX_MERIT_POINTS = 10,
+    MAX_MERIT_POINTS = 30,
 
     -- Minimum time between uses of yell command (in seconds).
     YELL_COOLDOWN = 30,
@@ -263,7 +263,7 @@ xi.settings.map =
     BLOCK_TELL_TO_HIDDEN_GM = false,
 
     -- Prevent players from performing WS while unengaged using packet injection.
-    PREVENT_UNENGAGED_WS = true,
+    PREVENT_UNENGAGED_WS = false,
 
     -- Command Audit [logging] commands with lower permission than this will not be logged.
     -- Zero for no logging at all. Commands given to non GMs are not logged.
@@ -295,12 +295,12 @@ xi.settings.map =
     HEALING_TICK_DELAY = 10,
 
     -- Enable/disable keeping jug pets through zoning
-    KEEP_JUGPET_THROUGH_ZONING = true,
+    KEEP_JUGPET_THROUGH_ZONING = false,
 
     -- Despawn jug pets that have a minimum level below level sync or zone level restriction.
     -- Such as despawning Courier Carrie in a level 20 cap when their minimum level to summon is 23.
     -- While the default value of false is retail accurate, there are some balance concerns such as using 1000 needles at low levels from the cactuar pet.
-    DESPAWN_JUGPETS_BELOW_MINIMUM_LEVEL = true,
+    DESPAWN_JUGPETS_BELOW_MINIMUM_LEVEL = false,
 
     -- Send stack traces to the client after caught Lua errors if
     -- their GM level is the same or higher than this number.
