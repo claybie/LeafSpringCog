@@ -8,6 +8,11 @@ mixins = { require('scripts/mixins/job_special') }
 ---@type TMobEntity
 local entity = {}
 
+local function isDivineMight(mob)
+    local bf = mob:getBattlefield()
+    return bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT
+end
+
 entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.DARK_SLEEP)
     mob:addImmunity(xi.immunity.LIGHT_SLEEP)
@@ -18,6 +23,12 @@ entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    -- Divine Might 75-cap solo+trust tuning: reduce TP spam and sustain
+    if isDivineMight(mob) then
+        mob:addMod(xi.mod.REGAIN, -75) -- 90 -> 15
+        mob:addMod(xi.mod.REGEN,  -10) -- 12 -> 2
+    end
 end
 
 entity.onMobSpawn = function(mob)

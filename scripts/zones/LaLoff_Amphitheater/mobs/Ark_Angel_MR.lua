@@ -12,10 +12,26 @@ local callPetParams =
     inactiveTime = 1000,
 }
 
+local function isDivineMight(mob)
+    local bf = mob:getBattlefield()
+    return bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT
+end
+
 local function spawnArkAngelPet(mob)
     local battlefield = mob:getBattlefield()
     if not battlefield then
         return
+    end
+
+    -- Divine Might 75-cap solo+trust tuning: only one pet alive at a time
+    if isDivineMight(mob) then
+        local existingPetId = mob:getLocalVar('DM_MR_PET_ID')
+        if existingPetId ~= 0 then
+            local existingPet = GetMobByID(existingPetId)
+            if existingPet and existingPet:isAlive() then
+                return
+            end
+        end
     end
 
     local battlefieldId    = battlefield:getID()
@@ -30,9 +46,20 @@ local function spawnArkAngelPet(mob)
         if pet then
             battlefield:insertEntity(pet:getTargID(), false, true)
 
+            if isDivineMight(mob) then
+                mob:setLocalVar('DM_MR_PET_ID', petId)
+            end
+
             pet:addListener('DEATH', 'AAMR_PET_DEATH_' .. petId, function(petArg)
                 local petBattlefield = petArg:getBattlefield()
-                petBattlefield:setLocalVar('petRespawnMR', GetSystemTime() + 30)
+                local respawnDelay   = 30
+
+                -- Divine Might 75-cap solo+trust tuning: slower respawn
+                if petBattlefield and petBattlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+                    respawnDelay = 150
+                end
+
+                petBattlefield:setLocalVar('petRespawnMR', GetSystemTime() + respawnDelay)
             end)
         end
     end
@@ -48,6 +75,12 @@ entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    -- Divine Might 75-cap solo+trust tuning: reduce TP spam and sustain
+    if isDivineMight(mob) then
+        mob:addMod(xi.mod.REGAIN, -75) -- 90 -> 15
+        mob:addMod(xi.mod.REGEN,  -10) -- 12 -> 2
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -73,12 +106,12 @@ entity.onMobFight = function(mob, target)
     local battlefield = mob:getBattlefield()
     if battlefield then
         local respawnTime = battlefield:getLocalVar('petRespawnMR')
-        if
-            respawnTime ~= 0 and
-            respawnTime <= GetSystemTime()
-        then
-            battlefield:setLocalVar('petRespawnMR', 0)
-            spawnArkAngelPet(mob)
+        if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
+            -- Divine Might 75-cap solo+trust tuning: pet respawns only in late phase
+            if not isDivineMight(mob) or mob:getHPP() < 40 then
+                battlefield:setLocalVar('petRespawnMR', 0)
+                spawnArkAngelPet(mob)
+            end
         end
     end
 end

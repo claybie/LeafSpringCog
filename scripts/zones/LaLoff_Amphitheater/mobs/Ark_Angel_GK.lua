@@ -12,6 +12,11 @@ local callPetParams =
     callPetJob = xi.job.DRG,
 }
 
+local function isDivineMight(mob)
+    local bf = mob:getBattlefield()
+    return bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT
+end
+
 local function spawnArkAngelPet(mob)
     local battlefield = mob:getBattlefield()
     if not battlefield then
@@ -49,9 +54,17 @@ entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.SPECIAL_COOL, 60)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    -- Divine Might 75-cap solo+trust tuning: reduce TP spam and sustain
+    if isDivineMight(mob) then
+        mob:addMod(xi.mod.REGAIN, -75) -- 90 -> 15
+        mob:addMod(xi.mod.REGEN,  -10) -- 12 -> 2
+    end
 end
 
 entity.onMobSpawn = function(mob)
+    local dm = isDivineMight(mob)
+
     xi.mix.jobSpecial.config(mob,
     {
         specials =
@@ -59,8 +72,8 @@ entity.onMobSpawn = function(mob)
             -- "Meikyo Shisui is used very frequently."
             {
                 id       = xi.jsa.MEIKYO_SHISUI,
-                hpp      = math.random(90, 95),
-                cooldown = 90,
+                hpp      = dm and math.random(65, 75) or math.random(90, 95),
+                cooldown = dm and 180 or 90,
 
                 begCode  = function(mobArg)
                     mobArg:setLocalVar('order', 0)
@@ -71,6 +84,14 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobEngage = function(mob, target)
+    -- Divine Might 75-cap solo+trust tuning: wyvern spawns once only
+    if isDivineMight(mob) then
+        if mob:getLocalVar('DM_WYVERN_SPAWNED') == 1 then
+            return
+        end
+        mob:setLocalVar('DM_WYVERN_SPAWNED', 1)
+    end
+
     spawnArkAngelPet(mob)
 end
 
@@ -92,11 +113,14 @@ entity.onMobFight = function(mob, target)
     local battlefield = mob:getBattlefield()
     if battlefield then
         local respawnTime = battlefield:getLocalVar('petRespawnGK')
-        if
-            respawnTime ~= 0 and
-            respawnTime <= GetSystemTime()
-        then
+        if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
             battlefield:setLocalVar('petRespawnGK', 0)
+
+            -- Divine Might 75-cap solo+trust tuning: no wyvern respawns
+            if isDivineMight(mob) then
+                return
+            end
+
             spawnArkAngelPet(mob)
         end
     end
