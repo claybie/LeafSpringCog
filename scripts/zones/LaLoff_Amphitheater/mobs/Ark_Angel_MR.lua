@@ -23,7 +23,7 @@ local function spawnArkAngelPet(mob)
         return
     end
 
-    -- Divine Might 75-cap solo+trust tuning: only one pet alive at a time
+    -- Divine Might: only one pet alive at a time
     if isDivineMight(mob) then
         local existingPetId = mob:getLocalVar('DM_MR_PET_ID')
         if existingPetId ~= 0 then
@@ -39,10 +39,9 @@ local function spawnArkAngelPet(mob)
     local content          = xi.battlefield.contents[battlefieldId]
     local selectedPetGroup = math.random(2, 3) -- 2 = Tiger, 3 = Mandragora
     local petId            = content.groups[selectedPetGroup]['mobIds'][battlefieldArea][1]
-    local pet              = GetMobByID(petId)
 
     if xi.mob.callPets(mob, petId, callPetParams) then
-        pet = GetMobByID(petId)
+        local pet = GetMobByID(petId)
         if pet then
             battlefield:insertEntity(pet:getTargID(), false, true)
 
@@ -54,7 +53,7 @@ local function spawnArkAngelPet(mob)
                 local petBattlefield = petArg:getBattlefield()
                 local respawnDelay   = 30
 
-                -- Divine Might 75-cap solo+trust tuning: slower respawn
+                -- Divine Might: slower respawn
                 if petBattlefield and petBattlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
                     respawnDelay = 150
                 end
@@ -94,6 +93,16 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobEngage = function(mob, target)
+    -- Divine Might: delay initial pet spawn to avoid opening add pile-on
+    if isDivineMight(mob) then
+        mob:timer(10000, function(mobArg)
+            if mobArg:isAlive() and mobArg:isEngaged() and mobArg:getHPP() < 90 then
+                spawnArkAngelPet(mobArg)
+            end
+        end)
+        return
+    end
+
     spawnArkAngelPet(mob)
 end
 
@@ -107,7 +116,7 @@ entity.onMobFight = function(mob, target)
     if battlefield then
         local respawnTime = battlefield:getLocalVar('petRespawnMR')
         if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
-            -- Divine Might 75-cap solo+trust tuning: pet respawns only in late phase
+            -- Divine Might: pet respawns only in late phase
             if not isDivineMight(mob) or mob:getHPP() < 40 then
                 battlefield:setLocalVar('petRespawnMR', 0)
                 spawnArkAngelPet(mob)

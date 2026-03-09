@@ -69,7 +69,6 @@ entity.onMobSpawn = function(mob)
     {
         specials =
         {
-            -- "Meikyo Shisui is used very frequently."
             {
                 id       = xi.jsa.MEIKYO_SHISUI,
                 hpp      = dm and math.random(65, 75) or math.random(90, 95),
@@ -84,12 +83,20 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobEngage = function(mob, target)
-    -- Divine Might 75-cap solo+trust tuning: wyvern spawns once only
+    -- Divine Might: wyvern spawns once only, and delayed to avoid opening pile-on
     if isDivineMight(mob) then
         if mob:getLocalVar('DM_WYVERN_SPAWNED') == 1 then
             return
         end
         mob:setLocalVar('DM_WYVERN_SPAWNED', 1)
+
+        mob:timer(10000, function(mobArg)
+            if mobArg:isAlive() and mobArg:isEngaged() and mobArg:getHPP() < 90 then
+                spawnArkAngelPet(mobArg)
+            end
+        end)
+
+        return
     end
 
     spawnArkAngelPet(mob)
@@ -116,7 +123,7 @@ entity.onMobFight = function(mob, target)
         if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
             battlefield:setLocalVar('petRespawnGK', 0)
 
-            -- Divine Might 75-cap solo+trust tuning: no wyvern respawns
+            -- Divine Might: no wyvern respawns
             if isDivineMight(mob) then
                 return
             end

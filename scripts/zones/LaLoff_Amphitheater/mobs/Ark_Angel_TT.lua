@@ -53,6 +53,22 @@ local function isDivineMight(mob)
     return bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT
 end
 
+local function dmLinkUnlocked(mob)
+    local bf = mob:getBattlefield()
+    if not (bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT) then
+        return true
+    end
+
+    local now = GetSystemTime()
+    local unlock = bf:getLocalVar('DM_LINK_UNLOCK_TIME')
+    if unlock == 0 then
+        bf:setLocalVar('DM_LINK_UNLOCK_TIME', now + 15)
+        unlock = now + 15
+    end
+
+    return now >= unlock
+end
+
 entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.DARK_SLEEP)
     mob:addImmunity(xi.immunity.LIGHT_SLEEP)
@@ -61,15 +77,22 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.STUN)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
+
+    -- Default (non-DM) values retained
     mob:setMobMod(xi.mobMod.MAGIC_COOL, 25)
     mob:addMod(xi.mod.UFASTCAST, 30)
+
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
 
-    -- Divine Might 75-cap solo+trust tuning: reduce TP spam and sustain
     if isDivineMight(mob) then
+        -- DM: reduce TP spam and sustain
         mob:addMod(xi.mod.REGAIN, -75) -- 90 -> 15
         mob:addMod(xi.mod.REGEN,  -10) -- 12 -> 2
+
+        -- DM: reduce opening nuke pressure (slower casting cadence + remove fast cast bonus)
+        mob:setMobMod(xi.mobMod.MAGIC_COOL, 60)
+        mob:addMod(xi.mod.UFASTCAST, -30) -- net 0
     end
 end
 
@@ -126,15 +149,28 @@ end
 entity.onMobEngage = function(mob, target)
     local mobid = mob:getID()
 
-    for member = mobid-5, mobid + 2 do
-        local m = GetMobByID(member)
-        if m and m:getCurrentAction() == xi.action.category.ROAMING then
-            m:updateEnmity(target)
+    -- DM: block instant mass engage for first 15s
+    if dmLinkUnlocked(mob) then
+        for member = mobid-5, mobid + 2 do
+            local m = GetMobByID(member)
+            if m and m:getCurrentAction() == xi.action.category.ROAMING then
+                m:updateEnmity(target)
+            end
         end
     end
 
     mob:setLocalVar('nextWarpCheck', GetSystemTime() + 17)
     mob:setMobMod(xi.mobMod.NO_MOVE, 1)
+
+    -- DM: prevent opening Fire IV spike by disabling casting briefly
+    if isDivineMight(mob) then
+        mob:setMagicCastingEnabled(false)
+        mob:timer(20000, function(mobArg)
+            if mobArg:isAlive() and mobArg:isEngaged() then
+                mobArg:setMagicCastingEnabled(true)
+            end
+        end)
+    end
 end
 
 entity.onMobFight = function(mob, target)
