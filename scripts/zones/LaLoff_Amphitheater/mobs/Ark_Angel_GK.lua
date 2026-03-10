@@ -9,12 +9,17 @@ local entity = {}
 
 local callPetParams =
 {
-    callPetJob = xi.job.DRG,
+    inactiveTime = 1000,
 }
 
-local function isDivineMight(mob)
-    local bf = mob:getBattlefield()
-    return bf and bf:getID() == xi.battlefield.id.DIVINE_MIGHT
+local function getGKPetIdForDivineMight(area, laLoffID)
+    if area == 1 then
+        return laLoffID.mob.ARK_ANGEL_GK + 13
+    elseif area == 2 then
+        return laLoffID.mob.ARK_ANGEL_GK + 21
+    else
+        return laLoffID.mob.ARK_ANGEL_GK + 29
+    end
 end
 
 local function spawnArkAngelPet(mob)
@@ -25,9 +30,24 @@ local function spawnArkAngelPet(mob)
 
     local battlefieldId   = battlefield:getID()
     local battlefieldArea = battlefield:getArea()
-    local content         = xi.battlefield.contents[battlefieldId]
-    local petGroupIndex   = battlefieldId == xi.battlefield.id.DIVINE_MIGHT and 4 or 2
-    local petId           = content.groups[petGroupIndex]['mobIds'][battlefieldArea][1]
+    local petId           = nil
+
+    -- Divine Might: compute pet IDs directly (do not rely on xi.battlefield.contents[].groups)
+    if battlefieldId == xi.battlefield.id.DIVINE_MIGHT then
+        local laLoff = zones[xi.zone.LALOFF_AMPHITHEATER]
+        petId = getGKPetIdForDivineMight(battlefieldArea, laLoff)
+    else
+        -- Fallback to existing behavior for other battlefields (as before)
+        local content = xi.battlefield.contents[battlefieldId]
+        local petGroupIndex = 2
+        if content and content.groups and content.groups[petGroupIndex] and content.groups[petGroupIndex].mobIds then
+            petId = content.groups[petGroupIndex].mobIds[battlefieldArea][1]
+        end
+    end
+
+    if not petId then
+        return
+    end
 
     if xi.mob.callPets(mob, petId, callPetParams) then
         local pet = GetMobByID(petId)
@@ -36,7 +56,9 @@ local function spawnArkAngelPet(mob)
 
             pet:addListener('DEATH', 'AAGK_PET_DEATH', function(petArg)
                 local petBattlefield = petArg:getBattlefield()
-                petBattlefield:setLocalVar('petRespawnGK', GetSystemTime() + 30)
+                if petBattlefield then
+                    petBattlefield:setLocalVar('petRespawnGK', GetSystemTime() + 30)
+                end
             end)
         end
     end
@@ -54,26 +76,17 @@ entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.SPECIAL_COOL, 60)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
-
-    -- Divine Might 75-cap solo+trust tuning: reduce TP spam and sustain
-    if isDivineMight(mob) then
-        mob:addMod(xi.mod.REGAIN, -75) -- 90 -> 15
-        mob:addMod(xi.mod.REGEN,  -10) -- 12 -> 2
-    end
 end
 
 entity.onMobSpawn = function(mob)
-    local dm = isDivineMight(mob)
-
     xi.mix.jobSpecial.config(mob,
     {
         specials =
         {
             {
                 id       = xi.jsa.MEIKYO_SHISUI,
-                hpp      = dm and math.random(65, 75) or math.random(90, 95),
-                cooldown = dm and 180 or 90,
-
+                hpp      = math.random(90, 95),
+                cooldown = 90,
                 begCode  = function(mobArg)
                     mobArg:setLocalVar('order', 0)
                 end,
@@ -83,22 +96,6 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobEngage = function(mob, target)
-    -- Divine Might: wyvern spawns once only, and delayed to avoid opening pile-on
-    if isDivineMight(mob) then
-        if mob:getLocalVar('DM_WYVERN_SPAWNED') == 1 then
-            return
-        end
-        mob:setLocalVar('DM_WYVERN_SPAWNED', 1)
-
-        mob:timer(10000, function(mobArg)
-            if mobArg:isAlive() and mobArg:isEngaged() and mobArg:getHPP() < 90 then
-                spawnArkAngelPet(mobArg)
-            end
-        end)
-
-        return
-    end
-
     spawnArkAngelPet(mob)
 end
 
@@ -122,12 +119,6 @@ entity.onMobFight = function(mob, target)
         local respawnTime = battlefield:getLocalVar('petRespawnGK')
         if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
             battlefield:setLocalVar('petRespawnGK', 0)
-
-            -- Divine Might: no wyvern respawns
-            if isDivineMight(mob) then
-                return
-            end
-
             spawnArkAngelPet(mob)
         end
     end
