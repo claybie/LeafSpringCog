@@ -37,10 +37,9 @@ local function spawnArkAngelPet(mob)
         local tigerId, mandyId = getMRPetIdsForDivineMight(battlefieldArea, laLoff)
         petId = (math.random(2) == 1) and tigerId or mandyId
     else
-        -- Original behavior for other battlefields (guarded)
         local content = xi.battlefield.contents[battlefieldId]
         if content and content.groups and content.groups[2] and content.groups[3] then
-            local selectedPetGroup = math.random(2, 3) -- 2 = Tiger, 3 = Mandragora
+            local selectedPetGroup = math.random(2, 3)
             local mobIds = content.groups[selectedPetGroup].mobIds
             if mobIds and mobIds[battlefieldArea] then
                 petId = mobIds[battlefieldArea][1]
@@ -75,8 +74,17 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.STUN)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
+
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        mob:delMod(xi.mod.REGAIN, 90)
+        mob:delMod(xi.mod.REGEN, 12)
+        mob:addMod(xi.mod.REGAIN, 30)
+        mob:addMod(xi.mod.REGEN, 4)
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -87,6 +95,22 @@ entity.onMobSpawn = function(mob)
             { id = xi.jsa.PERFECT_DODGE },
         },
     })
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        xi.mix.jobSpecial.config(mob,
+        {
+            specials =
+            {
+                { id = xi.jsa.PERFECT_DODGE, cooldown = 180 },
+            },
+        })
+
+        -- Spawn pet shortly after MR spawns (DM stagger flow safety)
+        mob:timer(1500, function(mobArg)
+            spawnArkAngelPet(mobArg)
+        end)
+    end
 end
 
 entity.onMobEngage = function(mob, target)

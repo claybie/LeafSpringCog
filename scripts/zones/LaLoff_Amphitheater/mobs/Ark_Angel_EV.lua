@@ -16,8 +16,22 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.STUN)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
+
+    -- Solo fight (non-DM)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        -- Divine Might-only rebalance: lower sustain + TP pressure
+        mob:delMod(xi.mod.REGAIN, 90)
+        mob:delMod(xi.mod.REGEN, 12)
+        mob:addMod(xi.mod.REGAIN, 30)
+        mob:addMod(xi.mod.REGEN, 4)
+
+        -- (TT already uses MAGIC_COOL in its script; EV doesn't, so set it here for DM only)
+        mob:setMobMod(xi.mobMod.MAGIC_COOL, 35) -- higher = less frequent casting
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -28,6 +42,18 @@ entity.onMobSpawn = function(mob)
             { id = xi.jsa.INVINCIBLE, hpp = math.random(90, 95), cooldown = 90 }, -- "Uses Invincible many times."
         },
     })
+
+    -- Divine Might-only: lower special pressure (Invincible cadence)
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        xi.mix.jobSpecial.config(mob, {
+            specials =
+            {
+                { id = xi.jsa.BENEDICTION, hpp = math.random(20, 30) },
+                { id = xi.jsa.INVINCIBLE, hpp = math.random(85, 90), cooldown = 180 }, -- was 90
+            },
+        })
+    end
 end
 
 entity.onMobEngage = function(mob, target)

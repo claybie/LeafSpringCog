@@ -32,12 +32,10 @@ local function spawnArkAngelPet(mob)
     local battlefieldArea = battlefield:getArea()
     local petId           = nil
 
-    -- Divine Might: compute pet IDs directly (do not rely on xi.battlefield.contents[].groups)
     if battlefieldId == xi.battlefield.id.DIVINE_MIGHT then
         local laLoff = zones[xi.zone.LALOFF_AMPHITHEATER]
         petId = getGKPetIdForDivineMight(battlefieldArea, laLoff)
     else
-        -- Fallback to existing behavior for other battlefields (as before)
         local content = xi.battlefield.contents[battlefieldId]
         local petGroupIndex = 2
         if content and content.groups and content.groups[petGroupIndex] and content.groups[petGroupIndex].mobIds then
@@ -72,10 +70,22 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.STUN)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
+
     mob:setMobMod(xi.mobMod.SPECIAL_SKILL, 732)
     mob:setMobMod(xi.mobMod.SPECIAL_COOL, 60)
+
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        mob:delMod(xi.mod.REGAIN, 90)
+        mob:delMod(xi.mod.REGEN, 12)
+        mob:addMod(xi.mod.REGAIN, 30)
+        mob:addMod(xi.mod.REGEN, 4)
+
+        mob:setMobMod(xi.mobMod.SPECIAL_COOL, 120)
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -93,6 +103,29 @@ entity.onMobSpawn = function(mob)
             },
         },
     })
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        xi.mix.jobSpecial.config(mob,
+        {
+            specials =
+            {
+                {
+                    id       = xi.jsa.MEIKYO_SHISUI,
+                    hpp      = math.random(85, 90),
+                    cooldown = 180,
+                    begCode  = function(mobArg)
+                        mobArg:setLocalVar('order', 0)
+                    end,
+                },
+            },
+        })
+
+        -- Spawn pet shortly after GK spawns.
+        mob:timer(1500, function(mobArg)
+            spawnArkAngelPet(mobArg)
+        end)
+    end
 end
 
 entity.onMobEngage = function(mob, target)

@@ -2,21 +2,16 @@
 -- Area: LaLoff Amphitheater
 -- Name: Divine Might
 --
--- One-at-a-time timer spawn using CANONICAL Divine Might mob IDs:
---  - Battlefield owns the correct Ark Angel mob IDs via the original DM mobIds list.
---  - At start we force ONLY TT to remain spawned; HM/GK/MR/EV are despawned.
---  - After TT first engages, HM/GK/MR/EV are spawned on timers.
---  - Anti-respawn: if a mob exists before its timer, despawn it; if it is dead, despawn if it reappears.
---  - Victory: only when all 5 have spawned at least once AND are dead.
+-- Staggered Ark Angels, 180s cadence:
+-- Start: only TT remains spawned; HM/GK/MR/EV are despawned.
+-- After TT first engages: HM @180, GK @360, MR @540, EV @720.
+-- Anti-respawn: if a mob exists before its timer, despawn it; if dead, despawn if it reappears.
 --
--- Pet fix (NEW):
---  - Spawn GK/MR pets explicitly from the battlefield script when GK/MR spawn.
---  - Insert pet entities into the battlefield so they are valid targets.
---  - (We do NOT rely on Ark_Angel_GK.lua / Ark_Angel_MR.lua pet logic, which may be brittle in this variant.)
+-- Pets:
+-- NOT spawned here.
+-- Pets are handled in Ark_Angel_GK.lua / Ark_Angel_MR.lua (which will also insertEntity).
 -----------------------------------
 local laLoffID = zones[xi.zone.LALOFF_AMPHITHEATER]
-
-print('[DM] Loaded scripts/battlefields/LaLoff_Amphitheater/divine_might.lua (v14 canonical-IDs despawn-gated + pet-spawn)')
 
 local content = Battlefield:new({
     zoneId        = xi.zone.LALOFF_AMPHITHEATER,
@@ -37,11 +32,6 @@ function content:entryRequirement(player, npc, isRegistrant, trade)
         player:getQuestStatus(xi.questLog.OUTLANDS, xi.quest.id.outlands.DIVINE_MIGHT_REPEAT) == xi.questStatus.QUEST_ACCEPTED
 end
 
-local function dmDebug(battlefield, msg)
-    print(string.format('[DM][area=%d] %s', battlefield:getArea(), msg))
-end
-
--- Canonical DM mob IDs (copied from original Divine Might group list)
 local dmIds =
 {
     [1] =
@@ -51,11 +41,6 @@ local dmIds =
         EV = laLoffID.mob.ARK_ANGEL_EV + 16,
         TT = laLoffID.mob.ARK_ANGEL_TT + 14,
         GK = laLoffID.mob.ARK_ANGEL_GK + 12,
-
-        -- Pets (from original DM pet groups)
-        GK_PET    = laLoffID.mob.ARK_ANGEL_GK + 13,
-        MR_TIGER  = laLoffID.mob.ARK_ANGEL_MR + 23,
-        MR_MANDY  = laLoffID.mob.ARK_ANGEL_MR + 24,
     },
     [2] =
     {
@@ -64,10 +49,6 @@ local dmIds =
         EV = laLoffID.mob.ARK_ANGEL_EV + 24,
         TT = laLoffID.mob.ARK_ANGEL_TT + 22,
         GK = laLoffID.mob.ARK_ANGEL_GK + 20,
-
-        GK_PET    = laLoffID.mob.ARK_ANGEL_GK + 21,
-        MR_TIGER  = laLoffID.mob.ARK_ANGEL_MR + 31,
-        MR_MANDY  = laLoffID.mob.ARK_ANGEL_MR + 32,
     },
     [3] =
     {
@@ -76,10 +57,6 @@ local dmIds =
         EV = laLoffID.mob.ARK_ANGEL_EV + 32,
         TT = laLoffID.mob.ARK_ANGEL_TT + 30,
         GK = laLoffID.mob.ARK_ANGEL_GK + 28,
-
-        GK_PET    = laLoffID.mob.ARK_ANGEL_GK + 29,
-        MR_TIGER  = laLoffID.mob.ARK_ANGEL_MR + 39,
-        MR_MANDY  = laLoffID.mob.ARK_ANGEL_MR + 40,
     },
 }
 
@@ -121,13 +98,6 @@ local function enableAndEngage(battlefield, mob, label)
             dmDebug(battlefield, string.format('%s enabled id=%d targid=%d', label, m:getID(), m:getTargID()))
         end
     end)
-end
-
-local function despawnIfSpawned(id)
-    local mob = GetMobByID(id)
-    if mob and mob:isSpawned() then
-        DespawnMob(id)
-    end
 end
 
 local function spawnIfNeeded(id)
@@ -182,92 +152,22 @@ local function suppressBeforeAllowedOrAfterDeath(battlefield, key, gateVar)
         return
     end
 
-    if isDead(battlefield, key) then
+    if isDead(battlefield, key) or battlefield:getLocalVar(gateVar) == 0 then
         DespawnMob(id)
-        return
-    end
-
-    if battlefield:getLocalVar(gateVar) == 0 then
-        DespawnMob(id)
-        return
-    end
-end
-
--- -------------------------
--- Pet spawning (NEW)
--- -------------------------
-local function spawnPetOnce(battlefield, who)
-    if who == 'GK' then
-        if battlefield:getLocalVar('DM_PET_GK_SPAWNED') == 1 then
-            return
-        end
-        battlefield:setLocalVar('DM_PET_GK_SPAWNED', 1)
-
-        local id = getId(battlefield, 'GK_PET')
-        dmDebug(battlefield, string.format('Spawning GK pet id=%d', id))
-        spawnIfNeeded(id)
-
-        local pet = GetMobByID(id)
-        if pet then
-            battlefield:insertEntity(pet:getTargID(), false, true)
-            enableAndEngage(battlefield, pet, 'GK_PET')
-        end
-        return
-    end
-
-    if who == 'MR' then
-        if battlefield:getLocalVar('DM_PET_MR_SPAWNED') == 1 then
-            return
-        end
-        battlefield:setLocalVar('DM_PET_MR_SPAWNED', 1)
-
-        local tiger = getId(battlefield, 'MR_TIGER')
-        local mandy = getId(battlefield, 'MR_MANDY')
-        local id = (math.random(2) == 1) and tiger or mandy
-
-        dmDebug(battlefield, string.format('Spawning MR pet id=%d', id))
-        spawnIfNeeded(id)
-
-        local pet = GetMobByID(id)
-        if pet then
-            battlefield:insertEntity(pet:getTargID(), false, true)
-            enableAndEngage(battlefield, pet, 'MR_PET')
-        end
     end
 end
 
 content.groups =
 {
-    -- Canonical DM mob list (battlefield owns correct IDs).
-    -- We will despawn HM/GK/MR/EV immediately in tick until their timers.
     {
         mobIds =
         {
-            {
-                dmIds[1].HM,
-                dmIds[1].MR,
-                dmIds[1].EV,
-                dmIds[1].TT,
-                dmIds[1].GK,
-            },
-            {
-                dmIds[2].HM,
-                dmIds[2].MR,
-                dmIds[2].EV,
-                dmIds[2].TT,
-                dmIds[2].GK,
-            },
-            {
-                dmIds[3].HM,
-                dmIds[3].MR,
-                dmIds[3].EV,
-                dmIds[3].TT,
-                dmIds[3].GK,
-            },
+            { dmIds[1].HM, dmIds[1].MR, dmIds[1].EV, dmIds[1].TT, dmIds[1].GK },
+            { dmIds[2].HM, dmIds[2].MR, dmIds[2].EV, dmIds[2].TT, dmIds[2].GK },
+            { dmIds[3].HM, dmIds[3].MR, dmIds[3].EV, dmIds[3].TT, dmIds[3].GK },
         },
-
         allDeath = function(battlefield, mob)
-            -- Don't win here; we win via allDefeated() to support stagger spawns
+            -- Win via allDefeated()
         end,
     },
 }
@@ -278,15 +178,12 @@ function content:onBattlefieldTick(battlefield, tick)
     if battlefield:getLocalVar('DM_LOGGED') == 0 then
         battlefield:setLocalVar('DM_LOGGED', 1)
         dmDebug(battlefield, string.format(
-            'Canonical IDs TT=%d HM=%d GK=%d MR=%d EV=%d | pets GK=%d MRt=%d MRm=%d',
+            'IDs TT=%d HM=%d GK=%d MR=%d EV=%d',
             getId(battlefield, 'TT'),
             getId(battlefield, 'HM'),
             getId(battlefield, 'GK'),
             getId(battlefield, 'MR'),
-            getId(battlefield, 'EV'),
-            getId(battlefield, 'GK_PET'),
-            getId(battlefield, 'MR_TIGER'),
-            getId(battlefield, 'MR_MANDY')
+            getId(battlefield, 'EV')
         ))
     end
 
@@ -297,7 +194,6 @@ function content:onBattlefieldTick(battlefield, tick)
         return
     end
 
-    -- Ensure TT is considered "seen" once spawned
     if not hasSeen(battlefield, 'TT') then
         local tt = GetMobByID(getId(battlefield, 'TT'))
         if tt and tt:isSpawned() then
@@ -306,22 +202,11 @@ function content:onBattlefieldTick(battlefield, tick)
         end
     end
 
-    -- Hard gate: keep later AAs despawned until their spawn var flips
     suppressBeforeAllowedOrAfterDeath(battlefield, 'HM', 'DM_SPAWN_HM')
     suppressBeforeAllowedOrAfterDeath(battlefield, 'GK', 'DM_SPAWN_GK')
     suppressBeforeAllowedOrAfterDeath(battlefield, 'MR', 'DM_SPAWN_MR')
     suppressBeforeAllowedOrAfterDeath(battlefield, 'EV', 'DM_SPAWN_EV')
 
-    -- Also suppress pets until their owner is spawned (so pets won't show early)
-    if battlefield:getLocalVar('DM_SPAWN_GK') == 0 then
-        despawnIfSpawned(getId(battlefield, 'GK_PET'))
-    end
-    if battlefield:getLocalVar('DM_SPAWN_MR') == 0 then
-        despawnIfSpawned(getId(battlefield, 'MR_TIGER'))
-        despawnIfSpawned(getId(battlefield, 'MR_MANDY'))
-    end
-
-    -- Start timer when TT engages
     if battlefield:getLocalVar('DM_START') == 0 then
         local tt = GetMobByID(getId(battlefield, 'TT'))
         if tt and tt:isEngaged() then
@@ -334,23 +219,10 @@ function content:onBattlefieldTick(battlefield, tick)
 
     local elapsed = GetSystemTime() - battlefield:getLocalVar('DM_START')
 
-    if elapsed >=  90 then
-        spawnAAOnce(battlefield, 'HM', 'DM_SPAWN_HM')
-    end
-
-    if elapsed >= 180 then
-        spawnAAOnce(battlefield, 'GK', 'DM_SPAWN_GK')
-        spawnPetOnce(battlefield, 'GK')
-    end
-
-    if elapsed >= 270 then
-        spawnAAOnce(battlefield, 'MR', 'DM_SPAWN_MR')
-        spawnPetOnce(battlefield, 'MR')
-    end
-
-    if elapsed >= 360 then
-        spawnAAOnce(battlefield, 'EV', 'DM_SPAWN_EV')
-    end
+    if elapsed >= 180 then spawnAAOnce(battlefield, 'HM', 'DM_SPAWN_HM') end
+    if elapsed >= 360 then spawnAAOnce(battlefield, 'GK', 'DM_SPAWN_GK') end
+    if elapsed >= 540 then spawnAAOnce(battlefield, 'MR', 'DM_SPAWN_MR') end
+    if elapsed >= 720 then spawnAAOnce(battlefield, 'EV', 'DM_SPAWN_EV') end
 end
 
 return content:register()

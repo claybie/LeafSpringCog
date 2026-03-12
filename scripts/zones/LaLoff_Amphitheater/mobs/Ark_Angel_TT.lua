@@ -57,11 +57,27 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
 
-    mob:setMobMod(xi.mobMod.MAGIC_COOL, 25)
+    -- Reduce AoE spell spam / overall casting pressure
+    mob:setMobMod(xi.mobMod.MAGIC_COOL, 35) -- was 25
     mob:addMod(xi.mod.UFASTCAST, 30)
 
+    -- Solo fight (non-DM)
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        -- Divine Might-only rebalance: lower sustain + TP pressure
+        mob:delMod(xi.mod.REGAIN, 90)
+        mob:delMod(xi.mod.REGEN, 12)
+        mob:addMod(xi.mod.REGAIN, 30)
+        mob:addMod(xi.mod.REGEN, 4)
+
+        -- Further reduce spell spam in DM
+        mob:setMobMod(xi.mobMod.MAGIC_COOL, 45)
+        mob:delMod(xi.mod.UFASTCAST, 30)
+        mob:addMod(xi.mod.UFASTCAST, 10)
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -74,6 +90,20 @@ entity.onMobSpawn = function(mob)
                 { id = xi.jsa.MANAFONT },
             },
         })
+
+    -- Divine Might-only: lower special pressure by spacing specials out more
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        xi.mix.jobSpecial.config(mob,
+        {
+            between = 90, -- was 30
+            specials =
+            {
+                { id = xi.jsa.BLOOD_WEAPON },
+                { id = xi.jsa.MANAFONT },
+            },
+        })
+    end
 
     mob:addListener('WEAPONSKILL_STATE_EXIT', 'WARP_OUT_COMPLETE', function(ttMob, skillId)
         if skillId == xi.mobSkill.ARKANGEL_TT_WARP_OUT then
