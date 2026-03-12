@@ -9,8 +9,18 @@ local entity = {}
 
 local callPetParams =
 {
-    callPetJob = xi.job.DRG,
+    inactiveTime = 1000,
 }
+
+local function getGKPetIdForDivineMight(area, laLoffID)
+    if area == 1 then
+        return laLoffID.mob.ARK_ANGEL_GK + 13
+    elseif area == 2 then
+        return laLoffID.mob.ARK_ANGEL_GK + 21
+    else
+        return laLoffID.mob.ARK_ANGEL_GK + 29
+    end
+end
 
 local function spawnArkAngelPet(mob)
     local battlefield = mob:getBattlefield()
@@ -20,9 +30,22 @@ local function spawnArkAngelPet(mob)
 
     local battlefieldId   = battlefield:getID()
     local battlefieldArea = battlefield:getArea()
-    local content         = xi.battlefield.contents[battlefieldId]
-    local petGroupIndex   = battlefieldId == xi.battlefield.id.DIVINE_MIGHT and 4 or 2
-    local petId           = content.groups[petGroupIndex]['mobIds'][battlefieldArea][1]
+    local petId           = nil
+
+    if battlefieldId == xi.battlefield.id.DIVINE_MIGHT then
+        local laLoff = zones[xi.zone.LALOFF_AMPHITHEATER]
+        petId = getGKPetIdForDivineMight(battlefieldArea, laLoff)
+    else
+        local content = xi.battlefield.contents[battlefieldId]
+        local petGroupIndex = 2
+        if content and content.groups and content.groups[petGroupIndex] and content.groups[petGroupIndex].mobIds then
+            petId = content.groups[petGroupIndex].mobIds[battlefieldArea][1]
+        end
+    end
+
+    if not petId then
+        return
+    end
 
     if xi.mob.callPets(mob, petId, callPetParams) then
         local pet = GetMobByID(petId)
@@ -31,7 +54,9 @@ local function spawnArkAngelPet(mob)
 
             pet:addListener('DEATH', 'AAGK_PET_DEATH', function(petArg)
                 local petBattlefield = petArg:getBattlefield()
-                petBattlefield:setLocalVar('petRespawnGK', GetSystemTime() + 30)
+                if petBattlefield then
+                    petBattlefield:setLocalVar('petRespawnGK', GetSystemTime() + 30)
+                end
             end)
         end
     end
@@ -45,10 +70,22 @@ entity.onMobInitialize = function(mob)
     mob:addImmunity(xi.immunity.STUN)
     mob:addImmunity(xi.immunity.TERROR)
     mob:setMobMod(xi.mobMod.CAN_PARRY, 3)
+
     mob:setMobMod(xi.mobMod.SPECIAL_SKILL, 732)
     mob:setMobMod(xi.mobMod.SPECIAL_COOL, 60)
+
     mob:addMod(xi.mod.REGAIN, 90)
     mob:addMod(xi.mod.REGEN, 12)
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        mob:delMod(xi.mod.REGAIN, 90)
+        mob:delMod(xi.mod.REGEN, 12)
+        mob:addMod(xi.mod.REGAIN, 30)
+        mob:addMod(xi.mod.REGEN, 4)
+
+        mob:setMobMod(xi.mobMod.SPECIAL_COOL, 120)
+    end
 end
 
 entity.onMobSpawn = function(mob)
@@ -56,18 +93,39 @@ entity.onMobSpawn = function(mob)
     {
         specials =
         {
-            -- "Meikyo Shisui is used very frequently."
             {
                 id       = xi.jsa.MEIKYO_SHISUI,
                 hpp      = math.random(90, 95),
                 cooldown = 90,
-
                 begCode  = function(mobArg)
                     mobArg:setLocalVar('order', 0)
                 end,
             },
         },
     })
+
+    local battlefield = mob:getBattlefield()
+    if battlefield and battlefield:getID() == xi.battlefield.id.DIVINE_MIGHT then
+        xi.mix.jobSpecial.config(mob,
+        {
+            specials =
+            {
+                {
+                    id       = xi.jsa.MEIKYO_SHISUI,
+                    hpp      = math.random(85, 90),
+                    cooldown = 180,
+                    begCode  = function(mobArg)
+                        mobArg:setLocalVar('order', 0)
+                    end,
+                },
+            },
+        })
+
+        -- Spawn pet shortly after GK spawns.
+        mob:timer(1500, function(mobArg)
+            spawnArkAngelPet(mobArg)
+        end)
+    end
 end
 
 entity.onMobEngage = function(mob, target)
@@ -92,10 +150,7 @@ entity.onMobFight = function(mob, target)
     local battlefield = mob:getBattlefield()
     if battlefield then
         local respawnTime = battlefield:getLocalVar('petRespawnGK')
-        if
-            respawnTime ~= 0 and
-            respawnTime <= GetSystemTime()
-        then
+        if respawnTime ~= 0 and respawnTime <= GetSystemTime() then
             battlefield:setLocalVar('petRespawnGK', 0)
             spawnArkAngelPet(mob)
         end
