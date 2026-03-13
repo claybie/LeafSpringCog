@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2018 Darkstar Dev Teams
@@ -193,7 +193,7 @@ void CTrustController::DoCombatTick(timer::time_point tick)
                     [[fallthrough]];
                 case TRUST_MOVEMENT_TYPE::LONG_RANGE:
                     [[fallthrough]];
-                default: // Using the positive-non-zero movementDistance mobMod value
+                default:
                 {
                     PathOutToDistance(PTarget, static_cast<float>(movementDistance));
                     break;
@@ -211,6 +211,18 @@ void CTrustController::DoCombatTick(timer::time_point tick)
             POwner->PAI->PathFind->FollowPath(m_Tick);
         }
 
+        // DEBUG: prove trust combat tick is running and gambits are ticking.
+        ShowDebug("[TRUST][TICK] %s engaged, target=%u, dist=%.2f",
+                  POwner->getName(), PTarget->targid, distance(POwner->loc.p, PTarget->loc.p));
+
+        // Fallback for ranged trusts: if a trust is configured to maintain a ranged distance,
+        // attempt a ranged attack directly even if gambit target resolution fails.
+        const int16 movementDistance = PTrust->getMobMod(MOBMOD_TRUST_DISTANCE);
+        if (movementDistance > 0)
+        {
+            RangedAttack(PTarget->targid);
+        }
+
         m_GambitsContainer->Tick(tick);
 
         POwner->PAI->EventHandler.triggerListener("COMBAT_TICK", POwner, POwner->PMaster, PTarget);
@@ -226,19 +238,17 @@ void CTrustController::DoRoamTick(timer::time_point tick)
     bool  masterMeleeSwing     = masterLastAttackTime > timer::now() - 1s;
 
     bool trustEngageCondition = false;
-    // NOTE: charvars are now cached, this is essentially a localvar read now.
     switch (charutils::GetCharVar(PMaster, "TrustEngageType"))
     {
-        case 1: // Master engages a monster, no melee swing required
+        case 1:
         {
             trustEngageCondition = PMaster->GetBattleTarget();
             break;
         }
-        case 0: // Nothing set
+        case 0:
             [[fallthrough]];
-        default: // Something invalid set
+        default:
         {
-            // Default retail behavior: Master engages a monster and executes a melee swing
             trustEngageCondition = PMaster->GetBattleTarget() && masterMeleeSwing;
             break;
         }
@@ -260,7 +270,6 @@ void CTrustController::DoRoamTick(timer::time_point tick)
             auto diff_angle = worldAngle(POwner->loc.p, POtherTrust->loc.p) + 64;
             auto amount     = (currentPartyPos % 2) ? 1.0f : -1.0f;
 
-            // clang-format off
             position_t new_pos =
             {
                    POwner->loc.p.x - (cosf(rotationToRadian(diff_angle)) * amount),
@@ -269,7 +278,6 @@ void CTrustController::DoRoamTick(timer::time_point tick)
                    0,
                    0,
             };
-            // clang-format on
 
             if (POwner->PAI->PathFind->ValidPosition(new_pos) && POwner->PAI->PathFind->PathAround(new_pos, RoamDistance, PATHFLAG_RUN | PATHFLAG_WALLHACK))
             {
@@ -300,7 +308,6 @@ void CTrustController::DoRoamTick(timer::time_point tick)
     {
         if (POwner->health.hp != POwner->health.maxhp || POwner->health.mp != POwner->health.maxmp)
         {
-            // recover 5% HP & MP
             uint32 recoverHP = (uint32)(POwner->health.maxhp * 0.05);
             uint32 recoverMP = (uint32)(POwner->health.maxmp * 0.05);
             POwner->addHP(recoverHP);
@@ -324,7 +331,6 @@ void CTrustController::Declump(CCharEntity* PMaster, CBattleEntity* PTarget)
             auto diffAngle  = worldAngle(POwner->loc.p, PTarget->loc.p) + 64;
             auto moveAmount = xirand::GetRandomNumber(0.0f, 1.5f) * ((currentPartyPos % 2) ? 1.0f : -1.0f);
 
-            // clang-format off
             position_t newPos =
             {
                 POwner->loc.p.x - (cosf(rotationToRadian(diffAngle)) * moveAmount),
@@ -333,7 +339,6 @@ void CTrustController::Declump(CCharEntity* PMaster, CBattleEntity* PTarget)
                 0,
                 0,
             };
-            // clang-format on
 
             if (POwner->PAI->PathFind->ValidPosition(newPos))
             {
@@ -360,7 +365,6 @@ void CTrustController::PathOutToDistance(CBattleEntity* PTarget, float amount)
         m_failedRepositionAttempts = 0;
     }
 
-    // Invalidate position and pick new one (limit: every 3s)
     if ((currentDistanceToTarget < amount - 2.5f || currentDistanceToTarget > amount + 2.5f || !POwner->PAI->PathFind->ValidPosition(POwner->loc.p)) &&
         m_Tick - m_LastRepositionTime > 3s && !m_InTransit)
     {
@@ -381,7 +385,6 @@ void CTrustController::PathOutToDistance(CBattleEntity* PTarget, float amount)
         bool position_found = false;
         for (auto& potential_position : positions)
         {
-            // Validate position
             if (!position_found && POwner->PAI->PathFind->ValidPosition(potential_position) && POwner->CanSeeTarget(potential_position, true))
             {
                 position_found  = true;
@@ -393,7 +396,6 @@ void CTrustController::PathOutToDistance(CBattleEntity* PTarget, float amount)
         m_LastRepositionTime = m_Tick;
     }
 
-    // Get somewhat close to the target destination
     if (distance(POwner->loc.p, target_position) > 2.0f && m_failedRepositionAttempts < 3)
     {
         POwner->PAI->PathFind->PathTo(target_position, PATHFLAG_RUN | PATHFLAG_WALLHACK);
@@ -426,21 +428,57 @@ bool CTrustController::RangedAttack(uint16 targid)
 {
     TracyZoneScoped;
 
-    timer::duration rangedDelay = 10s;
-    if (CItemWeapon* PRange = dynamic_cast<CItemWeapon*>(POwner->m_Weapons[SLOT_RANGED]))
+    // TEMP DEBUG: verify gambit is calling into trust controller and whether ranged state can start.
+    if (POwner && POwner->objtype == TYPE_TRUST)
     {
-        rangedDelay = std::chrono::milliseconds(PRange->getDelay());
+        ShowDebug("[TRUST][RATTACK] %s: called RangedAttack(targid=%u)", POwner->getName(), targid);
     }
 
-    if (m_Tick - m_LastRangedAttackTime > rangedDelay && !m_InTransit)
+    int16 delay = POwner->GetRangedWeaponDelay(false);
+    if (delay <= 0)
     {
-        FaceTarget(PTarget->targid);
-        if (POwner->PAI->CanChangeState() && POwner->PAI->Internal_RangedAttack(targid))
-        {
-            m_LastRangedAttackTime = m_Tick;
-        }
-        return true;
+        delay = 3000;
     }
+
+    const auto rangedDelay = std::chrono::milliseconds(delay);
+
+    if (POwner->PAI->PathFind && POwner->PAI->PathFind->IsFollowingPath())
+    {
+        if (POwner && POwner->objtype == TYPE_TRUST)
+        {
+            ShowDebug("[TRUST][RATTACK] %s: blocked (IsFollowingPath)", POwner->getName());
+        }
+        return false;
+    }
+
+    FaceTarget(targid);
+
+    if (m_Tick - m_LastRangedAttackTime > rangedDelay)
+    {
+        const bool canStart =
+            POwner->PAI->CanChangeState() ||
+            (POwner->PAI->GetCurrentState() && POwner->PAI->GetCurrentState()->IsCompleted());
+
+        if (!canStart)
+        {
+            if (POwner && POwner->objtype == TYPE_TRUST)
+            {
+                ShowDebug("[TRUST][RATTACK] %s: cannot start (CanChangeState=false, IsCompleted=false)", POwner->getName());
+            }
+            m_LastRangedAttackTime = m_Tick;
+            return false;
+        }
+
+        const bool ok = POwner->PAI->Internal_RangedAttack(targid);
+        if (POwner && POwner->objtype == TYPE_TRUST)
+        {
+            ShowDebug("[TRUST][RATTACK] %s: Internal_RangedAttack returned %s", POwner->getName(), ok ? "true" : "false");
+        }
+
+        m_LastRangedAttackTime = m_Tick;
+        return ok;
+    }
+
     return false;
 }
 
@@ -465,7 +503,6 @@ bool CTrustController::Cast(uint16 targid, SpellID spellid)
     auto PSpellFamily = PSpell->getSpellFamily();
     bool canCast      = true;
 
-    // clang-format off
     static_cast<CCharEntity*>(POwner->PMaster)->ForPartyWithTrusts([&](CBattleEntity* PMember)
     {
         if (PMember->objtype == TYPE_TRUST && PMember->PAI->IsCurrentState<CMagicState>())
@@ -510,7 +547,6 @@ bool CTrustController::Cast(uint16 targid, SpellID spellid)
             }
         }
     });
-    // clang-format on
 
     if (!canCast)
     {

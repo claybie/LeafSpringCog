@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2024 LandSandBoat Dev Teams
@@ -29,6 +29,7 @@
 
 #include "battleutils.h"
 #include "charutils.h"
+#include "itemutils.h"
 #include "mobutils.h"
 #include "zoneutils.h"
 
@@ -53,6 +54,46 @@
 void BuildTrustData(uint32 TrustID);
 auto LoadTrust(CCharEntity* PMaster, uint32 TrustID) -> CTrustEntity*;
 void LoadTrustStatsAndSkills(CTrustEntity* PTrust);
+
+namespace
+{
+// Helper: ensure a trust has pseudo-weapon objects for the given slot by duplicating SLOT_MAIN using itemutils.
+// Trusts don't have real equipment, but a number of systems expect m_Weapons slots to be populated.
+static void EnsureTrustWeaponSlot(CTrustEntity* PTrust, uint8 slotToEnsure)
+{
+    if (!PTrust)
+    {
+        return;
+    }
+
+    if (PTrust->m_Weapons[slotToEnsure] != nullptr)
+    {
+        return;
+    }
+
+    auto* mainWeapon = dynamic_cast<CItemWeapon*>(PTrust->m_Weapons[SLOT_MAIN]);
+    if (!mainWeapon)
+    {
+        return;
+    }
+
+    // Duplicate the same item ID as main weapon, then override damage/delay below.
+    auto* copiedItem = itemutils::GetItem(mainWeapon->getID());
+    if (!copiedItem)
+    {
+        return;
+    }
+
+    auto* copiedWeapon = dynamic_cast<CItemWeapon*>(copiedItem);
+    if (!copiedWeapon)
+    {
+        delete copiedItem;
+        return;
+    }
+
+    PTrust->m_Weapons[slotToEnsure] = copiedWeapon;
+}
+} // namespace
 
 struct TrustData
 {
@@ -385,6 +426,12 @@ auto LoadTrust(CCharEntity* PMaster, uint32 TrustID) -> CTrustEntity*
     const float  adjustedDamage   = baseDamage * damageMultiplier;
     const uint16 finalDamage      = static_cast<uint16>(std::max(adjustedDamage, 1.0f));
 
+    // Ensure ranged trusts have pseudo ranged+ammo weapons so RATTACK can function.
+    // Semih and similar trusts rely on RATTACK gambits; without SLOT_RANGED/SLOT_AMMO being populated,
+    // delay/damage calculations can prevent any ranged attacks from occurring.
+    EnsureTrustWeaponSlot(PTrust, SLOT_RANGED);
+    EnsureTrustWeaponSlot(PTrust, SLOT_AMMO);
+
     // Trust do not really have weapons, but they are modelled internally as
     // if they do.
     if (auto* mainWeapon = dynamic_cast<CItemWeapon*>(PTrust->m_Weapons[SLOT_MAIN]))
@@ -406,6 +453,8 @@ auto LoadTrust(CCharEntity* PMaster, uint32 TrustID) -> CTrustEntity*
 
     if (auto* rangedWeapon = dynamic_cast<CItemWeapon*>(PTrust->m_Weapons[SLOT_RANGED]))
     {
+        // If the trust is configured with a melee cmbSkill, keep it.
+        // Otherwise, ranged trusts should have an appropriate ranged skill type set by their lua/scripts/mods.
         rangedWeapon->setDamage(finalDamage);
         rangedWeapon->setDelay((trustData->cmbDelay * 1000) / 60);
         rangedWeapon->setBaseDelay((trustData->cmbDelay * 1000) / 60);
