@@ -211,17 +211,13 @@ void CTrustController::DoCombatTick(timer::time_point tick)
             POwner->PAI->PathFind->FollowPath(m_Tick);
         }
 
-        // DEBUG: prove trust combat tick is running and gambits are ticking.
-        ShowDebug("[TRUST][TICK] %s engaged, target=%u, dist=%.2f",
-                  POwner->getName(), PTarget->targid, distance(POwner->loc.p, PTarget->loc.p));
-
-        // Fallback for ranged trusts: if a trust is configured to maintain a ranged distance,
-        // attempt a ranged attack directly even if gambit target resolution fails.
-        const int16 movementDistance = PTrust->getMobMod(MOBMOD_TRUST_DISTANCE);
-        if (movementDistance > 0)
-        {
-            RangedAttack(PTarget->targid);
-        }
+        // NOTE:
+        // Do NOT force ranged attacks here.
+        // Ranged attacks should be driven by gambits (ai.r.RATTACK) so that the gambit retry delay
+        // is respected and trusts like Semih do not spam ranged attacks.
+        //
+        // The previous "fallback for ranged trusts" caused Semih to effectively RATTACK every combat tick,
+        // regardless of the gambit retry delay, which is incorrect behavior.
 
         m_GambitsContainer->Tick(tick);
 

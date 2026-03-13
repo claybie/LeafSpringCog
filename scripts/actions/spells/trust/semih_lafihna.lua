@@ -34,8 +34,8 @@ spellObject.onMobSpawn = function(mob)
         end
     end)
 
-    -- Ranged Attack as much as possible (limited by 'weapon' delay)
-    mob:addGambit(ai.t.TARGET, { ai.c.ALWAYS, 0 }, { ai.r.RATTACK, 0, 0 })
+    -- Ranged Attack (cooldown to reduce spam/aggro; other ranged trusts commonly use 10s here)
+    mob:addGambit(ai.t.TARGET, { ai.c.ALWAYS, 0 }, { ai.r.RATTACK, 0, 0 }, 10)
 
     mob:setAutoAttackEnabled(false)
 
