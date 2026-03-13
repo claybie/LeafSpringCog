@@ -22,11 +22,13 @@
 #include "ability.h"
 
 #include "common/database.h"
+#include "common/timer.h"
 #include "enums/recast.h"
 
 #include "lua/luautils.h"
 
 #include <map>
+#include <unordered_map>
 
 CAbility::CAbility(uint16 id)
 : m_ID(id)
@@ -394,7 +396,20 @@ CAbility* GetAbility(uint16 AbilityID)
     {
         return itr->second.get();
     }
-    ShowDebug("Unable to look up ability %d", AbilityID);
+
+    // Rate-limit to prevent log spam if scripts repeatedly request missing IDs.
+    static std::unordered_map<uint16, timer::time_point> s_lastMissingAbilityLog;
+    const auto now = timer::now();
+
+    constexpr auto kLogInterval = 5s;
+
+    const auto it = s_lastMissingAbilityLog.find(AbilityID);
+    if (it == s_lastMissingAbilityLog.end() || (now - it->second) > kLogInterval)
+    {
+        s_lastMissingAbilityLog[AbilityID] = now;
+        ShowDebug("Unable to look up ability %d", AbilityID);
+    }
+
     return nullptr;
 }
 
