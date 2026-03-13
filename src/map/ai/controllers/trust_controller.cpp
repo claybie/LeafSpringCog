@@ -461,7 +461,10 @@ bool CTrustController::RangedAttack(uint16 targid)
             {
                 ShowDebug("[TRUST][RATTACK] %s: cannot start (CanChangeState=false, IsCompleted=false)", POwner->getName());
             }
-            m_LastRangedAttackTime = m_Tick;
+
+            // IMPORTANT:
+            // Do not advance m_LastRangedAttackTime if we didn't actually start a ranged attack.
+            // Otherwise, trusts can "self-throttle" for a full ranged delay even when the attack never fired.
             return false;
         }
 
@@ -471,7 +474,12 @@ bool CTrustController::RangedAttack(uint16 targid)
             ShowDebug("[TRUST][RATTACK] %s: Internal_RangedAttack returned %s", POwner->getName(), ok ? "true" : "false");
         }
 
-        m_LastRangedAttackTime = m_Tick;
+        // Only advance the ranged attack timer if we actually started the ranged attack.
+        if (ok)
+        {
+            m_LastRangedAttackTime = m_Tick;
+        }
+
         return ok;
     }
 
