@@ -32,6 +32,11 @@ function content:entryRequirement(player, npc, isRegistrant, trade)
         player:getQuestStatus(xi.questLog.OUTLANDS, xi.quest.id.outlands.DIVINE_MIGHT_REPEAT) == xi.questStatus.QUEST_ACCEPTED
 end
 
+-- Required for onBattlefieldTick to stagger-spawn AAs
+local function dmDebug(battlefield, msg)
+    print(string.format('[DM][area=%d] %s', battlefield:getArea(), msg))
+end
+
 local dmIds =
 {
     [1] =
