@@ -596,20 +596,11 @@ local function giveItem(player, npc, itemNum, subOption)
 end
 
 -----------------------------------
--- Desc: Casket spawn checks, runs through all checks before spawning
+-- Desc: Casket spawn checks, runs through all checks before spawning.
+-- NOTE: Casket spawning has been entirely disabled.
 -----------------------------------
 xi.caskets.spawnCasket = function(player, mob, x, y, z, r)
-    local chestId    = getCasketID(mob)
-    local npc        = GetNPCByID(chestId)
-    local chestOwner = player:getLeaderID()
-
-    if chestId == 0 then
-        return
-    end
-
-    if dropChance(player) then
-        setCasketData(player, x, y, z, r, npc, chestOwner, mob:getMainLvl())
-    end
+    return -- Disabled to target pre-2008 behavior.
 end
 
 -----------------------------------
