@@ -22,7 +22,11 @@ spellObject.onMobSpawn = function(mob)
 
     mob:addGambit(ai.t.SELF, { ai.c.NOT_STATUS, xi.effect.SHARPSHOT }, { ai.r.JA, ai.s.SPECIFIC, xi.ja.SHARPSHOT })
 
-    mob:addGambit(ai.t.SELF, { ai.c.NOT_STATUS, xi.effect.DOUBLE_SHOT }, { ai.r.JA, ai.s.SPECIFIC, xi.ja.DOUBLE_SHOT })
+    -- Gate by the trust's level for portability (so 75-cap servers won't attempt to use it).
+    local trustLevel = mob.getMainLvl and mob:getMainLvl() or 0
+    if trustLevel >= 79 then
+        mob:addGambit(ai.t.SELF, { ai.c.NOT_STATUS, xi.effect.DOUBLE_SHOT }, { ai.r.JA, ai.s.SPECIFIC, xi.ja.DOUBLE_SHOT })
+    end
 
     -- TODO: Stealth Shot not yet implemented
     -- mob:addGambit(ai.t.SELF, { ai.c.HAS_TOP_ENMITY, 0 }, { ai.r.JA, ai.s.SPECIFIC, xi.ja.STEALTH_SHOT })
@@ -34,13 +38,14 @@ spellObject.onMobSpawn = function(mob)
         end
     end)
 
-    -- Ranged Attack as much as possible (limited by 'weapon' delay)
-    mob:addGambit(ai.t.TARGET, { ai.c.ALWAYS, 0 }, { ai.r.RATTACK, 0, 0 })
+    -- Ranged Attack (cooldown to reduce spam/aggro; other ranged trusts commonly use 10s here)
+    mob:addGambit(ai.t.TARGET, { ai.c.ALWAYS, 0 }, { ai.r.RATTACK, 0, 0 }, 10)
 
     mob:setAutoAttackEnabled(false)
 
     -- Gets 252 TP per hit even at level 1, see https://www.bg-wiki.com/ffxi/BGWiki:Trusts#Semih_Lafihna
     -- Using STP as a hack to ensure proper TP amount, as her delay is not that high on retail.
+    -- TODO: Further testing is needed to guage if this might be too excessive for 75-cap challenge.
     mob:addMod(xi.mod.STORETP, 86)
 
     mob:setMobMod(xi.mobMod.TRUST_DISTANCE, xi.trust.movementType.LONG_RANGE)

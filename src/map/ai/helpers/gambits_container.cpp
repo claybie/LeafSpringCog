@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2025 LandSandBoat Dev Teams
@@ -37,7 +37,6 @@
 
 #include "ai/controllers/player_controller.h"
 #include "ai/controllers/trust_controller.h"
-#include "weapon_skill.h"
 
 #include <ranges>
 
@@ -67,11 +66,13 @@ std::string CGambitsContainer::AddGambit(const Gambit_t& gambit)
             }
         }
     }
+
     if (available)
     {
         gambits.emplace_back(gambit);
         return gambit.identifier;
     }
+
     return "";
 }
 
@@ -106,7 +107,6 @@ void CGambitsContainer::Tick(timer::time_point tick)
         return;
     }
 
-    // TODO: Is this necessary?
     // Not already doing something
     if (POwner->PAI->IsCurrentState<CAbilityState>() || POwner->PAI->IsCurrentState<CRangeState>() || POwner->PAI->IsCurrentState<CMagicState>() ||
         POwner->PAI->IsCurrentState<CWeaponSkillState>() || POwner->PAI->IsCurrentState<CMobSkillState>() ||
@@ -152,8 +152,21 @@ void CGambitsContainer::Tick(timer::time_point tick)
         }
         else if (targetType == G_TARGET::TARGET)
         {
-            auto* mob = POwner->GetBattleTarget();
-            potentialTargets.push_back(mob);
+            // Trust battle target pointers can be transient; resolve robustly and never push nullptrs.
+            CBattleEntity* mob = POwner->GetBattleTarget();
+            if (mob == nullptr)
+            {
+                const auto targid = POwner->GetBattleTargetID();
+                if (targid != 0)
+                {
+                    mob = static_cast<CBattleEntity*>(POwner->GetEntity(targid, TYPE_MOB | TYPE_PC | TYPE_PET | TYPE_TRUST));
+                }
+            }
+
+            if (mob != nullptr && mob->isAlive() && POwner->loc.zone == mob->loc.zone)
+            {
+                potentialTargets.push_back(mob);
+            }
         }
         else if (targetType == G_TARGET::PARTY)
         {
@@ -177,7 +190,8 @@ void CGambitsContainer::Tick(timer::time_point tick)
             if (mob != nullptr)
             {
                 // clang-format off
-                    static_cast<CCharEntity*>(POwner->PMaster)->ForParty([&](CBattleEntity* PMember) {
+                    static_cast<CCharEntity*>(POwner->PMaster)->ForParty([&](CBattleEntity* PMember)
+                    {
                         if (PMember->isDead())
                         {
                             potentialTargets.push_back(PMember);
@@ -274,6 +288,11 @@ void CGambitsContainer::Tick(timer::time_point tick)
         // For each potential target, check if the predicates resolves
         for (auto& potentialTarget : potentialTargets)
         {
+            if (potentialTarget == nullptr)
+            {
+                continue;
+            }
+
             // All predicate groups must resolve successfully for the target to be considered
             bool targetMatchAllPredicates = true;
             for (auto& predicateGroup : gambit.predicate_groups)
@@ -298,9 +317,6 @@ void CGambitsContainer::Tick(timer::time_point tick)
         }
 
         // Execute all actions defined on the Gambit
-        // TODO: When multiple actions are defined:
-        // - Recast of all actions should be considered before executing
-        // - Casting 2 spells in a row does not yet work
         for (auto& action : gambit.actions)
         {
             if (action.reaction == G_REACTION::RATTACK)
@@ -328,11 +344,6 @@ void CGambitsContainer::Tick(timer::time_point tick)
                 else if (action.select == G_SELECT::LOWEST)
                 {
                     // TODO
-                    // auto spell_id = POwner->SpellContainer->GetWorstAvailable(static_cast<SPELLFAMILY>(gambit.action.select_arg));
-                    // if (spell_id.has_value())
-                    //{
-                    //    controller->Cast(target->targid, static_cast<SpellID>(spell_id.value()));
-                    //}
                 }
                 else if (action.select == G_SELECT::BEST_INDI)
                 {
@@ -418,7 +429,7 @@ void CGambitsContainer::Tick(timer::time_point tick)
                     if (PSCEffect == nullptr)
                     {
                         ShowError("G_SELECT::MB_ELEMENT: PSCEffect was null.");
-                        return;
+                        continue;
                     }
 
                     std::list<SKILLCHAIN_ELEMENT> resonanceProperties;
@@ -434,8 +445,6 @@ void CGambitsContainer::Tick(timer::time_point tick)
                     {
                         for (auto& chain_element : battleutils::GetSkillchainMagicElement(resonance_element))
                         {
-                            // TODO: SpellContianer->GetBestByElement(ELEMENT)
-                            // NOTE: Iterating this list in reverse guarantees finding the best match
                             for (size_t i = POwner->SpellContainer->m_damageList.size(); i > 0; --i)
                             {
                                 auto spell         = POwner->SpellContainer->m_damageList[i - 1];
@@ -460,7 +469,18 @@ void CGambitsContainer::Tick(timer::time_point tick)
                 auto* PAbility = ability::GetAbility(action.select_arg);
                 if (PAbility == nullptr)
                 {
-                    return;
+                    // v6+context: print gambit and action context so we can find the bad script/parse.
+                    // NOTE: action.select_arg is the script-provided "argument" field for the action.
+                    ShowDebug("CGambitsContainer::Tick: trust=%s gambitId=%s targetSel=%u retry=%u "
+                              "action{reaction=%u select=%u arg=%u}: Unable to look up ability",
+                              POwner ? POwner->getName() : "<unknown>",
+                              gambit.identifier.c_str(),
+                              static_cast<uint16>(gambit.target_selector),
+                              gambit.retry_delay,
+                              static_cast<uint16>(action.reaction),
+                              static_cast<uint16>(action.select),
+                              action.select_arg);
+                    continue;
                 }
 
                 auto mLevel = POwner->GetMLevel();
@@ -913,8 +933,6 @@ bool CGambitsContainer::TryTrustSkill()
 
                 if (!PSCEffect) // Opener
                 {
-                    // TODO: This relies on the skills being passed in in some kind of correct order...
-                    // Probably best to do this another way
                     chosen_skill = tp_skills.at(tp_skills.size() - 1);
                     break;
                 }

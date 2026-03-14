@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -34,6 +34,24 @@
 #include "utils/battleutils.h"
 #include "utils/charutils.h"
 
+namespace
+{
+static void DebugTrustRangeFail(CBattleEntity* PEntity, const char* reason, MsgBasic msg = MsgBasic::NONE)
+{
+    if (PEntity && PEntity->objtype == TYPE_TRUST)
+    {
+        if (msg != MsgBasic::NONE)
+        {
+            ShowDebug("[TRUST][RANGE] %s: %s (MsgBasic=%u)", PEntity->getName(), reason, static_cast<uint16>(msg));
+        }
+        else
+        {
+            ShowDebug("[TRUST][RANGE] %s: %s", PEntity->getName(), reason);
+        }
+    }
+}
+} // namespace
+
 CRangeState::CRangeState(CBattleEntity* PEntity, uint16 targid)
 : CState(PEntity, targid)
 , m_PEntity(PEntity)
@@ -42,6 +60,7 @@ CRangeState::CRangeState(CBattleEntity* PEntity, uint16 targid)
 
     if (!PTarget || this->HasErrorMsg())
     {
+        DebugTrustRangeFail(m_PEntity, "invalid target or HasErrorMsg() during IsValidTarget()");
         if (this->HasErrorMsg())
         {
             throw CStateInitException(m_errorMsg->copy());
@@ -54,6 +73,8 @@ CRangeState::CRangeState(CBattleEntity* PEntity, uint16 targid)
 
     if (!CanUseRangedAttack(PTarget, false))
     {
+        // CanUseRangedAttack will have filled m_errorMsg with a battle message.
+        DebugTrustRangeFail(m_PEntity, "CanUseRangedAttack() returned false at start");
         if (this->HasErrorMsg())
         {
             throw CStateInitException(m_errorMsg->copy());
@@ -66,15 +87,22 @@ CRangeState::CRangeState(CBattleEntity* PEntity, uint16 targid)
 
     if (distance(m_PEntity->loc.p, PTarget->loc.p) > 25)
     {
+        DebugTrustRangeFail(m_PEntity, "target too far away (>25)");
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, PTarget, 0, 0, MsgBasic::TOO_FAR_AWAY);
         throw CStateInitException(m_errorMsg->copy());
     }
 
     // https://www.bg-wiki.com/ffxi/Delay#Ranged_Delay
-    // GetRangedDelayReduction is 2 of the 3 steps of `Ranged Weapon Delay x (1 - Snapshot) x (1 - Velocity Shot) x (1 - Rapid Shot)`
-    // If Rapid Shot fires it will do the third multiplicative step
     auto delay = m_PEntity->GetRangedWeaponDelay(false);
-    delay      = battleutils::GetRangedDelayReduction(m_PEntity, delay);
+
+    // Trust hardening: if ranged delay isn't available, use a sane baseline so aim time isn't 0ms.
+    if (m_PEntity->objtype == TYPE_TRUST && delay <= 0)
+    {
+        DebugTrustRangeFail(m_PEntity, "GetRangedWeaponDelay(false) <= 0; applying fallback delay");
+        delay = 3000;
+    }
+
+    delay = battleutils::GetRangedDelayReduction(m_PEntity, delay);
 
     // Rapid Shot
     if (m_PEntity->objtype == TYPE_PC || m_PEntity->objtype == TYPE_TRUST)
@@ -96,9 +124,6 @@ CRangeState::CRangeState(CBattleEntity* PEntity, uint16 targid)
             {
                 if (xirand::GetRandomNumber(100) < chance)
                 {
-                    // reduce delay by 2-50%
-                    // https://www.bg-wiki.com/ffxi/Rapid_Shot
-                    // https://www.ffxiah.com/forum/topic/49806/ranger-firing-range-testing/4/#3233650
                     delay       = (int16)(delay * (1.0f - xirand::GetRandomNumber<uint16>(2, 50) / 100.0f));
                     m_rapidShot = true;
                 }
@@ -148,6 +173,7 @@ bool CRangeState::Update(timer::time_point tick)
 
         if (HasMoved())
         {
+            DebugTrustRangeFail(m_PEntity, "HasMoved() interrupted ranged attack", MsgBasic::MOVE_AND_INTERRUPT);
             m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, m_PEntity, 0, 0, MsgBasic::MOVE_AND_INTERRUPT);
         }
 
@@ -159,7 +185,7 @@ bool CRangeState::Update(timer::time_point tick)
             {
                 PChar->pushPacket(m_errorMsg->copy());
             }
-            // reset aim time so interrupted players only have to wait the correct 2.7s until next shot
+
             m_aimTime = 0s;
             ActionInterrupts::RangedInterrupt(m_PEntity);
             m_PEntity->PAI->EventHandler.triggerListener("RANGE_STATE_EXIT", m_PEntity, nullptr, &action);
@@ -174,7 +200,6 @@ bool CRangeState::Update(timer::time_point tick)
             }
 
             m_PEntity->OnRangedAttack(*this, action);
-            // Only send packet if action was populated (e.g. interrupts return early)
             if (!action.targets.empty())
             {
                 m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE2>(action));
@@ -205,6 +230,7 @@ bool CRangeState::CanUseRangedAttack(CBattleEntity* PTarget, bool isEndOfAttack)
 {
     if (!PTarget)
     {
+        DebugTrustRangeFail(m_PEntity, "no target", MsgBasic::CANNOT_ATTACK_TARGET);
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, m_PEntity, 0, 0, MsgBasic::CANNOT_ATTACK_TARGET);
         return false;
     }
@@ -226,7 +252,6 @@ bool CRangeState::CanUseRangedAttack(CBattleEntity* PTarget, bool isEndOfAttack)
         {
             case SKILL_THROWING:
             {
-                // remove barrage, doesn't work here
                 PChar->StatusEffectContainer->DelStatusEffect(EFFECT_BARRAGE);
                 break;
             }
@@ -254,17 +279,18 @@ bool CRangeState::CanUseRangedAttack(CBattleEntity* PTarget, bool isEndOfAttack)
 
     if (!facing(m_PEntity->loc.p, PTarget->loc.p, 64))
     {
+        DebugTrustRangeFail(m_PEntity, "not facing target", MsgBasic::CANNOT_SEE);
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, PTarget, 0, 0, MsgBasic::CANNOT_SEE);
         return false;
     }
 
     if (!isEndOfAttack && !m_PEntity->CanSeeTarget(PTarget, false))
     {
+        DebugTrustRangeFail(m_PEntity, "cannot see target (CanSeeTarget failed)", MsgBasic::CANNOT_PERFORM_ACTION);
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, PTarget, 0, 0, MsgBasic::CANNOT_PERFORM_ACTION);
         return false;
     }
 
-    // make sure player is waiting the appropriate time between ranged attacks
     if (auto PChar = dynamic_cast<CCharEntity*>(m_PEntity))
     {
         if (m_PEntity->PAI->getTick() - PChar->m_LastRangedAttackTime < m_freePhaseTime)
@@ -277,6 +303,7 @@ bool CRangeState::CanUseRangedAttack(CBattleEntity* PTarget, bool isEndOfAttack)
     uint8 anim = m_PEntity->animation;
     if (anim != ANIMATION_NONE && anim != ANIMATION_ATTACK)
     {
+        DebugTrustRangeFail(m_PEntity, "bad animation state for ranged", MsgBasic::CANNOT_PERFORM_ACTION);
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, PTarget, 0, 0, MsgBasic::CANNOT_PERFORM_ACTION);
         return false;
     }
