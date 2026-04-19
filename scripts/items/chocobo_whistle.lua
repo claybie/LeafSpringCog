@@ -2,18 +2,36 @@
 -- ID: 15533
 -- Item: Chocobo Whistle
 --
--- Notes: Can't use item below lv 20, no need to adjust duration for that.
---    Can't normally use enchantments when level sync'd below items level so no need to check.
---    Per wiki, can actually obtain without license, but cannot use, so we DO check that.
+-- Customized:
+--   - Keep chocobo license behavior in place (required to use)
+--   - Require at least one job level 60+ to use as a mount call
 -----------------------------------
 ---@type TItem
 local itemObject = {}
 
+local function hasAnyJobLevelAtLeast(player, level)
+    for jobId = 1, (xi.MAX_JOB_TYPE - 1) do
+        if player:getJobLevel(jobId) >= level then
+            return true
+        end
+    end
+
+    return false
+end
+
 itemObject.onItemCheck = function(target, item, param, caster)
     if not target:canUseMisc(xi.zoneMisc.MOUNT) then
         return xi.msg.basic.CANT_BE_USED_IN_AREA
-    elseif not target:hasKeyItem(xi.ki.CHOCOBO_LICENSE) or target:hasEnmity() then
+    end
+
+    -- Leave chocobo license (renting) behavior intact: still required to use the whistle.
+    if not target:hasKeyItem(xi.ki.CHOCOBO_LICENSE) or target:hasEnmity() then
         return xi.msg.basic.ITEM_UNABLE_TO_USE -- Todo: Verify/correct message, order of message priority.
+    end
+
+    -- New rule: must have at least one job at level 60+ (job does not need to be active).
+    if not hasAnyJobLevelAtLeast(target, 60) then
+        return xi.msg.basic.ITEM_UNABLE_TO_USE
     end
 
     return 0

@@ -521,9 +521,11 @@ void GP_CLI_COMMAND_ACTION::process(MapSession* PSession, CCharEntity* PChar) co
             {
                 PChar->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 0, 0, MsgBasic::CANNOT_USE_IN_AREA);
             }
-            else if (PChar->GetMLevel() < 20)
+            else if (PChar->getHighestJobLevel() < 60)
             {
-                PChar->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 20, 0, MsgBasic::MOUNT_REQUIRED_LEVEL);
+                // NOTE: MsgBasic::MOUNT_REQUIRED_LEVEL text mentions "main job level",
+                // but we are intentionally enforcing "highest job level".
+                PChar->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 60, 0, MsgBasic::MOUNT_REQUIRED_LEVEL);
             }
             else if (charutils::hasKeyItem(PChar, mountKeyItem))
             {

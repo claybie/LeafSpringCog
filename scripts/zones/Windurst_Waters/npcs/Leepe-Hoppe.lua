@@ -52,14 +52,12 @@ local function getFenrirRewardMask(player)
 
     if player:hasSpell(xi.magic.spell.FENRIR) then
         rewardMask = rewardMask + 64
-    end  -- Pact
+    end -- Pact
 
-    if
-        not player:hasKeyItem(xi.ki.TRAINERS_WHISTLE) or
-        player:hasKeyItem(xi.ki.FENRIR_WHISTLE)
-    then
+    -- Mount Pact (Fenrir mount) is available if the player does not already have the Fenrir whistle.
+    if not player:hasKeyItem(xi.ki.FENRIR_WHISTLE) then
         rewardMask = rewardMask + 128
-    end -- Mount Pact
+    end
 
     return rewardMask
 end
@@ -75,8 +73,8 @@ end
 
 entity.onTrigger = function(player, npc)
     local moonlitPath = player:getQuestStatus(xi.questLog.WINDURST, xi.quest.id.windurst.THE_MOONLIT_PATH)
-    local tuningIn = player:getQuestStatus(xi.questLog.WINDURST, xi.quest.id.windurst.TUNING_IN)
-    local tuningOut = player:getQuestStatus(xi.questLog.WINDURST, xi.quest.id.windurst.TUNING_OUT)
+    local tuningIn    = player:getQuestStatus(xi.questLog.WINDURST, xi.quest.id.windurst.TUNING_IN)
+    local tuningOut   = player:getQuestStatus(xi.questLog.WINDURST, xi.quest.id.windurst.TUNING_OUT)
 
     -- Tuning In
     if
@@ -106,44 +104,42 @@ entity.onTrigger = function(player, npc)
         player:getFameLevel(xi.fameArea.SANDORIA) >= 6 and
         player:getFameLevel(xi.fameArea.BASTOK) >= 6 and
         player:getFameLevel(xi.fameArea.NORG) >= 4
-    then -- Fenrir flag event
-
+    then
         player:startEvent(842, 0, 1125)
-    elseif moonlitPath == xi.questStatus.QUEST_ACCEPTED then
-        if player:hasKeyItem(xi.ki.MOON_BAUBLE) then -- Default text after acquiring moon bauble and before fighting Fenrir
-            player:startEvent(845, 0, 1125, 334)
-        elseif player:hasKeyItem(xi.ki.WHISPER_OF_THE_MOON) then -- First turn-in
-            local availRewards = 0
-            if
-                not player:hasKeyItem(xi.ki.TRAINERS_WHISTLE) or
-                player:hasKeyItem(xi.ki.FENRIR_WHISTLE)
-            then
-                availRewards = availRewards + 128
-            end -- Mount Pact
 
+    elseif moonlitPath == xi.questStatus.QUEST_ACCEPTED then
+        if player:hasKeyItem(xi.ki.MOON_BAUBLE) then
+            player:startEvent(845, 0, 1125, 334)
+        elseif player:hasKeyItem(xi.ki.WHISPER_OF_THE_MOON) then
+            local availRewards = 0
+            if not player:hasKeyItem(xi.ki.FENRIR_WHISTLE) then
+                availRewards = availRewards + 128
+            end
             player:startEvent(846, 0, 13399, 1208, 1125, availRewards, 18165, 13572)
         elseif hasAvatarWhispers(player) then
-            -- Collected the whispers
             player:startEvent(844, 0, 1125, 334)
-        else -- Talked to after flag without the whispers
+        else
             player:startEvent(843, 0, 1125)
         end
-    elseif moonlitPath == xi.questStatus.QUEST_COMPLETED then
-        if player:hasKeyItem(xi.ki.MOON_BAUBLE) then -- Default text after acquiring moon bauble and before fighting Fenrir
-            player:startEvent(845, 0, 1125, 334)
-        elseif player:hasKeyItem(xi.ki.WHISPER_OF_THE_MOON) then -- Repeat turn-in
-            local availRewards = getFenrirRewardMask(player)
 
+    elseif moonlitPath == xi.questStatus.QUEST_COMPLETED then
+        if player:hasKeyItem(xi.ki.MOON_BAUBLE) then
+            player:startEvent(845, 0, 1125, 334)
+        elseif player:hasKeyItem(xi.ki.WHISPER_OF_THE_MOON) then
+            local availRewards = getFenrirRewardMask(player)
             player:startEvent(850, 0, 13399, 1208, 1125, availRewards, 18165, 13572)
-        elseif GetSystemTime() > player:getCharVar('MoonlitPath_date') then --24 hours have passed, flag a new fight
+        elseif GetSystemTime() > player:getCharVar('MoonlitPath_date') then
             player:startEvent(848, 0, 1125, 334)
         end
+
     elseif tuningIn == xi.questStatus.QUEST_ACCEPTED then
-        player:startEvent(885, 0, 1696, 1697, 1698) -- Reminder to bring Magicked Steel Ingot, Spruce Lumber, Extra-fine File
+        player:startEvent(885, 0, 1696, 1697, 1698)
+
     elseif tuningOut == xi.questStatus.QUEST_ACCEPTED then
-        player:startEvent(889) -- Reminder to go help Ildy in Kazham
+        player:startEvent(889)
+
     elseif moonlitPath == xi.questStatus.QUEST_COMPLETED then
-        player:startEvent(847, 0, 1125) -- Having completed Moonlit Path, this will indefinitely replace his standard dialogue!
+        player:startEvent(847, 0, 1125)
     end
 end
 
@@ -165,29 +161,26 @@ entity.onEventFinish = function(player, csid, option, npc)
         player:delQuest(xi.questLog.OUTLANDS, xi.quest.id.outlands.TRIAL_BY_WIND)
         player:delQuest(xi.questLog.SANDORIA, xi.quest.id.sandoria.TRIAL_BY_ICE)
         player:delQuest(xi.questLog.OTHER_AREAS, xi.quest.id.otherAreas.TRIAL_BY_LIGHTNING)
-    elseif csid == 846 or csid == 850 then -- Turn-in event
+    elseif csid == 846 or csid == 850 then
         local reward = xi.item.NONE
         if option == 1 then
-            reward = xi.item.FENRIRS_STONE -- Fenrir's Stone
+            reward = xi.item.FENRIRS_STONE
         elseif option == 2 then
-            reward = xi.item.FENRIRS_CAPE -- Fenrir's Cape
+            reward = xi.item.FENRIRS_CAPE
         elseif option == 3 then
-            reward = xi.item.FENRIRS_TORQUE -- Fenrir's Torque
+            reward = xi.item.FENRIRS_TORQUE
         elseif option == 4 then
-            reward = xi.item.FENRIRS_EARRING -- Fenrir's Earring
+            reward = xi.item.FENRIRS_EARRING
         elseif option == 5 then
-            reward = xi.item.ANCIENTS_KEY -- Ancient's Key
+            reward = xi.item.ANCIENTS_KEY
         elseif option == 6 then
             npcUtil.giveCurrency(player, 'gil', 15000)
         elseif option == 7 then
-            player:addSpell(xi.magic.spell.FENRIR) -- Pact
+            player:addSpell(xi.magic.spell.FENRIR)
         elseif option == 8 then
             npcUtil.giveKeyItem(player, xi.ki.FENRIR_WHISTLE)
-            -- Pact as Mount
         end
 
-        -- TODO: Reward is never nil since it is initialized; however, we should't run this block
-        -- if the player chooses an item, and they don't have space in their inventory.
         player:addTitle(xi.title.HEIR_OF_THE_NEW_MOON)
         player:delKeyItem(xi.ki.WHISPER_OF_THE_MOON)
         player:setCharVar('MoonlitPath_date', JstMidnight())
@@ -232,11 +225,11 @@ entity.onEventFinish = function(player, csid, option, npc)
     elseif
         csid == 897 and
         npcUtil.completeQuest(player, xi.questLog.WINDURST, xi.quest.id.windurst.TUNING_OUT, {
-            item = xi.item.CACHE_NEZ, -- Cache-Nez
+            item = xi.item.CACHE_NEZ,
             title = xi.title.FRIEND_OF_THE_HELMED,
         })
     then
-        player:setCharVar('TuningOut_Progress', 0) -- zero when quest is done
+        player:setCharVar('TuningOut_Progress', 0)
     end
 end
 
