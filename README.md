@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="res/lsc.png">
+    <img src="res/lsc-4gh.png">
     <h1 align="center">LeafSpringCog</h1>
 </p>
 
