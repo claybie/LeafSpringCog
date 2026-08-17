@@ -24,6 +24,14 @@ local content = BattlefieldMission:new({
     requiredMissionStatus = 0,
 })
 
+local function tryGrantLevitusKey(player)
+    -- Add 5% chance to grant LEVITUS_KEY on Phase 2 Eald'narche death.
+    if not player:hasKeyItem(xi.ki.LEVITUS_KEY) and math.random(100) <= 5 then
+        player:addKeyItem(xi.ki.LEVITUS_KEY)
+        player:messageSpecial(celestialNexusID.text.KEYITEM_OBTAINED, xi.ki.LEVITUS_KEY)
+    end
+end
+
 function content:onEventFinishBattlefield(player, csid, option, npc)
     if csid == 32004 then
         local battlefield = player:getBattlefield()
@@ -114,6 +122,12 @@ content.groups =
 
         spawned = false,
         death   = function(battlefield, mob)
+            local players = battlefield:getPlayers()
+
+            for _, player in pairs(players) do
+                tryGrantLevitusKey(player)
+            end
+
             battlefield:setStatus(xi.battlefield.status.WON)
         end
     },
