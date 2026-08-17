@@ -61,6 +61,14 @@ local function returnToAirship(player)
     end
 end
 
+local function tryGrantOmegaWhistle(player)
+    -- Add "RARE" drop rate (5%) for Omega whistle on death.
+    if not player:hasKeyItem(xi.ki.OMEGA_WHISTLE) and math.random(100) <= 5 then
+        player:addKeyItem(xi.ki.OMEGA_WHISTLE)
+        player:messageSpecial(sealionsDenID.text.KEYITEM_OBTAINED, xi.ki.OMEGA_WHISTLE)
+    end
+end
+
 function content.onExitTrigger(player, npc)
     return content:progressEvent(32003, npc:getID() - sealionsDenID.npc.AIRSHIP_DOOR_OFFSET + 1, player:getLocalVar('[OTBF]battleCompleted') * 2):setPriority(1001)
 end
@@ -130,6 +138,7 @@ content.sections =
 
                 [11] = function(player, csid, option, npc)
                     player:addTitle(xi.title.OMEGA_OSTRACIZER)
+                    tryGrantOmegaWhistle(player)
                     healCharacter(player)
                     returnToAirship(player)
 
