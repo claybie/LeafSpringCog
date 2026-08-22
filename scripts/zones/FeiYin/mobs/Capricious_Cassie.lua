@@ -118,6 +118,20 @@ entity.onMobFight = function(mob, target)
 end
 
 entity.onMobDeath = function(mob, player, optParams)
+    -- 5% chance Morbol Mount drop.
+    if player and math.random(100) <= 5 then
+        local members = player:getAlliance()
+
+        for _, member in ipairs(members) do
+            if member and member:isPC() and member:getZoneID() == mob:getZoneID() then
+                if not member:hasKeyItem(xi.ki.MORBOL_COMPANION) then
+                    member:addKeyItem(xi.ki.MORBOL_COMPANION)
+                    member:messageSpecial(zones[mob:getZoneID()].text.KEYITEM_OBTAINED, xi.ki.MORBOL_COMPANION)
+                end
+            end
+        end
+    end
+
     if player then
         player:addTitle(xi.title.CASSIENOVA)
     end
